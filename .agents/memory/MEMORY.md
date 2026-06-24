@@ -1,0 +1,1 @@
+- [Local backend architecture](local-backend.md) — Express+PostgreSQL replaces Base44; localClient.js mimics Base44 entity interface.
