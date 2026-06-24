@@ -17,12 +17,12 @@ export default function Platnosc() {
 
   useEffect(() => {
     if (status === 'success' && clientId) {
-      // Mark client as paid when returning from Stripe success page (backup, webhook is primary)
       base44.entities.Client.update(clientId, { paymentStatus: 'paid' }).catch(() => {});
       setLoading(false);
       return;
     }
-    if (status === 'success' || status === 'cancel') {
+
+    if (status === 'success') {
       setLoading(false);
       return;
     }
@@ -51,6 +51,17 @@ export default function Platnosc() {
     setError('');
 
     try {
+      if (slotId) {
+        try {
+          await base44.entities.AvailableSlot.update(slotId, {
+            isBooked: true,
+            bookedByClientId: clientId,
+          });
+        } catch (e) {
+          console.error('Slot lock failed:', e);
+        }
+      }
+
       const result = await base44.functions.createStripeSession({
         clientId,
         serviceId: service.id,
@@ -62,11 +73,17 @@ export default function Platnosc() {
       if (result.url) {
         window.location.href = result.url;
       } else {
+        if (slotId) {
+          base44.entities.AvailableSlot.update(slotId, { isBooked: false, bookedByClientId: '' }).catch(() => {});
+        }
         setError(result.error || 'Nie udało się utworzyć sesji płatności. Spróbuj ponownie.');
         setPaying(false);
       }
     } catch (e) {
       console.error(e);
+      if (slotId) {
+        base44.entities.AvailableSlot.update(slotId, { isBooked: false, bookedByClientId: '' }).catch(() => {});
+      }
       setError('Błąd połączenia ze Stripe. Sprawdź konfigurację kluczy API lub spróbuj ponownie.');
       setPaying(false);
     }
@@ -80,7 +97,6 @@ export default function Platnosc() {
     );
   }
 
-  // SUCCESS
   if (status === 'success') {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center text-center px-4" style={{ background: '#000', paddingTop: '80px' }}>
@@ -109,7 +125,6 @@ export default function Platnosc() {
     );
   }
 
-  // CANCEL
   if (status === 'cancel') {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center text-center px-4" style={{ background: '#000', paddingTop: '80px' }}>
@@ -128,10 +143,10 @@ export default function Platnosc() {
         <div className="flex gap-4 flex-wrap justify-center">
           <button
             onClick={handlePay}
-            disabled={paying}
+            disabled={paying || !service}
             className="font-ui font-bold text-sm px-8 py-4 uppercase tracking-widest transition-all duration-300"
-            style={{ background: '#FFC107', color: '#000', border: '1px solid #FFC107', cursor: 'pointer' }}
-            onMouseEnter={e => { if (!paying) { e.currentTarget.style.background = '#FFF020'; } }}
+            style={{ background: '#FFC107', color: '#000', border: '1px solid #FFC107', cursor: paying || !service ? 'not-allowed' : 'pointer', opacity: paying || !service ? 0.7 : 1 }}
+            onMouseEnter={e => { if (!paying && service) { e.currentTarget.style.background = '#FFF020'; } }}
             onMouseLeave={e => { e.currentTarget.style.background = '#FFC107'; }}
           >
             {paying ? 'Przekierowanie...' : 'Spróbuj ponownie'}
@@ -148,7 +163,6 @@ export default function Platnosc() {
     );
   }
 
-  // PAYMENT FORM
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4" style={{ background: '#000', paddingTop: '80px', color: '#fff' }}>
       <div className="max-w-lg w-full">

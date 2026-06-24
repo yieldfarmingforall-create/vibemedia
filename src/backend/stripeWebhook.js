@@ -16,7 +16,6 @@ export default async function handler(req) {
     return Response.json({ error: "Missing stripe-signature" }, { status: 400 });
   }
 
-  // Verify Stripe webhook signature (HMAC-SHA256)
   const sigParts = sigHeader.split(",");
   const tPart = sigParts.find(p => p.startsWith("t="));
   const v1Part = sigParts.find(p => p.startsWith("v1="));
@@ -44,7 +43,6 @@ export default async function handler(req) {
     return Response.json({ error: "Invalid signature" }, { status: 401 });
   }
 
-  // Check timestamp to prevent replay attacks (5 min tolerance)
   const now = Math.floor(Date.now() / 1000);
   if (Math.abs(now - parseInt(timestamp)) > 300) {
     return Response.json({ error: "Timestamp too old" }, { status: 400 });
@@ -55,6 +53,7 @@ export default async function handler(req) {
   if (event.type === "checkout.session.completed") {
     const session = event.data.object;
     const clientId = session.client_reference_id || session.metadata?.clientId;
+    const slotId = session.metadata?.slotId;
     const sessionId = session.id;
     const amountPaid = session.amount_total;
 
@@ -70,16 +69,69 @@ export default async function handler(req) {
         console.error("Failed to update client:", e);
       }
     }
+
+    if (slotId) {
+      try {
+        await base44.entities.AvailableSlot.update(slotId, {
+          isBooked: true,
+          bookedByClientId: clientId || "",
+        });
+        console.log(`✓ Slot ${slotId} marked as booked by client ${clientId}`);
+      } catch (e) {
+        console.error("Failed to update slot:", e);
+      }
+    }
   }
 
   if (event.type === "checkout.session.expired") {
     const session = event.data.object;
     const clientId = session.client_reference_id || session.metadata?.clientId;
+    const slotId = session.metadata?.slotId;
+
+    if (clientId) {
+      try {
+        await base44.entities.Client.update(clientId, { paymentStatus: "failed" });
+        console.log(`✗ Client ${clientId} payment expired`);
+      } catch (e) {
+        console.error("Failed to update client on expiry:", e);
+      }
+    }
+
+    if (slotId) {
+      try {
+        await base44.entities.AvailableSlot.update(slotId, {
+          isBooked: false,
+          bookedByClientId: "",
+        });
+        console.log(`↩ Slot ${slotId} unlocked after expired session`);
+      } catch (e) {
+        console.error("Failed to unlock slot:", e);
+      }
+    }
+  }
+
+  if (event.type === "payment_intent.payment_failed") {
+    const pi = event.data.object;
+    const metadata = pi.metadata || {};
+    const clientId = metadata.clientId;
+    const slotId = metadata.slotId;
+
     if (clientId) {
       try {
         await base44.entities.Client.update(clientId, { paymentStatus: "failed" });
       } catch (e) {
-        console.error("Failed to update client on expiry:", e);
+        console.error("Failed to update client on payment_failed:", e);
+      }
+    }
+
+    if (slotId) {
+      try {
+        await base44.entities.AvailableSlot.update(slotId, {
+          isBooked: false,
+          bookedByClientId: "",
+        });
+      } catch (e) {
+        console.error("Failed to unlock slot on payment_failed:", e);
       }
     }
   }

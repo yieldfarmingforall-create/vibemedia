@@ -168,9 +168,6 @@ export default function AdminLogin() {
               {loading ? 'Weryfikacja...' : 'Zaloguj się'}
             </button>
 
-            <p className="font-body text-xs text-center mt-2" style={{ color: '#333' }}>
-              Domyślne hasło: NorbertAdmin2024!
-            </p>
           </form>
         )}
 
