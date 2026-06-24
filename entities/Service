@@ -1,0 +1,32 @@
+{
+  "name": "Service",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Service name displayed on tile"
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed description shown in the info box"
+    },
+    "price": {
+      "type": "number",
+      "description": "Price in PLN grosz (e.g. 50000 = 500 PLN)"
+    },
+    "stripeProductId": {
+      "type": "string",
+      "description": "Stripe product/price ID"
+    },
+    "order": {
+      "type": "number",
+      "description": "Display order (1-4)"
+    }
+  },
+  "required": [
+    "name",
+    "description",
+    "price",
+    "order"
+  ]
+}

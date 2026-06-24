@@ -1,0 +1,30 @@
+{
+  "name": "Review",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "image",
+        "video"
+      ],
+      "description": "Media type: image or video"
+    },
+    "fileUrl": {
+      "type": "string",
+      "description": "URL to the uploaded media file"
+    },
+    "description": {
+      "type": "string",
+      "description": "Optional HTML description (WYSIWYG)"
+    },
+    "order": {
+      "type": "number",
+      "description": "Display order"
+    }
+  },
+  "required": [
+    "type",
+    "fileUrl"
+  ]
+}

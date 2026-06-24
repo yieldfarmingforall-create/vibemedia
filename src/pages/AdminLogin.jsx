@@ -1,0 +1,234 @@
+import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { base44 } from '@/api/base44Client';
+import { Eye, EyeOff } from 'lucide-react';
+import { verifyTotp } from '@/lib/totp';
+
+const DEFAULT_PASSWORD = 'NorbertAdmin2024!';
+const SESSION_KEY = 'adminSession';
+
+export default function AdminLogin() {
+  const navigate = useNavigate();
+  const [step, setStep] = useState('credentials'); // credentials | totp
+  const [password, setPassword] = useState('');
+  const [showPass, setShowPass] = useState(false);
+  const [totpCode, setTotpCode] = useState(['', '', '', '', '', '']);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [twoFAEnabled, setTwoFAEnabled] = useState(false);
+  const totpRefs = useRef([]);
+
+  useEffect(() => {
+    // Check if already logged in
+    if (sessionStorage.getItem(SESSION_KEY) === 'authenticated') {
+      navigate('/management-dashboard-secure-nr7x912/dashboard');
+    }
+    // Load 2FA setting
+    base44.entities.AdminSettings.filter({ settingKey: 'twoFAEnabled' }).then(data => {
+      if (data && data[0]) setTwoFAEnabled(data[0].value === 'true');
+    }).catch(() => {});
+  }, []);
+
+  const handleCredentials = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    try {
+      // Load stored password or use default
+      const stored = await base44.entities.AdminSettings.filter({ settingKey: 'adminPassword' });
+      const storedPassword = stored && stored[0] ? stored[0].value : DEFAULT_PASSWORD;
+      if (password !== storedPassword) {
+        setError('Nieprawidłowe hasło.');
+        setLoading(false);
+        return;
+      }
+      if (twoFAEnabled) {
+        setStep('totp');
+      } else {
+        sessionStorage.setItem(SESSION_KEY, 'authenticated');
+        navigate('/management-dashboard-secure-nr7x912/dashboard');
+      }
+    } catch (e) {
+      setError('Błąd połączenia. Spróbuj ponownie.');
+    }
+    setLoading(false);
+  };
+
+  const handleTotpChange = (idx, val) => {
+    const v = val.replace(/\D/g, '').slice(-1);
+    const next = [...totpCode];
+    next[idx] = v;
+    setTotpCode(next);
+    if (v && idx < 5) totpRefs.current[idx + 1]?.focus();
+  };
+
+  const handleTotpKeyDown = (idx, e) => {
+    if (e.key === 'Backspace' && !totpCode[idx] && idx > 0) {
+      totpRefs.current[idx - 1]?.focus();
+    }
+    if (e.key === 'ArrowLeft' && idx > 0) totpRefs.current[idx - 1]?.focus();
+    if (e.key === 'ArrowRight' && idx < 5) totpRefs.current[idx + 1]?.focus();
+  };
+
+  const handleTotpPaste = (e) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    const next = [...totpCode];
+    for (let i = 0; i < 6; i++) next[i] = pasted[i] || '';
+    setTotpCode(next);
+    totpRefs.current[Math.min(pasted.length, 5)]?.focus();
+  };
+
+  const handleTotpVerify = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    const code = totpCode.join('');
+    try {
+      const storedTotp = await base44.entities.AdminSettings.filter({ settingKey: 'totpSecret' });
+      if (!storedTotp || !storedTotp[0]) {
+        setError('Brak skonfigurowanego sekretu TOTP. Wyłącz i włącz 2FA ponownie w ustawieniach.');
+        setLoading(false);
+        return;
+      }
+      const valid = await verifyTotp(storedTotp[0].value, code);
+      if (!valid) {
+        setError('Nieprawidłowy kod TOTP. Sprawdź aplikację Authenticator.');
+        setLoading(false);
+        return;
+      }
+      sessionStorage.setItem(SESSION_KEY, 'authenticated');
+      navigate('/management-dashboard-secure-nr7x912/dashboard');
+    } catch {
+      setError('Błąd weryfikacji. Spróbuj ponownie.');
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div
+      className="min-h-screen flex items-center justify-center px-4"
+      style={{ background: '#000', color: '#fff' }}
+    >
+      <div className="w-full max-w-sm">
+        {/* Logo / Brand */}
+        <div className="text-center mb-10">
+          <div
+            className="inline-flex w-14 h-14 rounded-full items-center justify-center mb-4"
+            style={{ border: '1px solid rgba(255,193,7,0.4)', background: 'rgba(255,193,7,0.05)' }}
+          >
+            <span style={{ color: '#FFC107', fontSize: '1.5rem' }}>⚡</span>
+          </div>
+          <h1 className="font-heading font-black text-xl mb-1" style={{ color: '#FFC107', letterSpacing: '0.1em' }}>
+            PANEL ADMINA
+          </h1>
+          <p className="font-ui text-xs" style={{ color: '#555', letterSpacing: '0.1em' }}>
+            DOSTĘP ZASTRZEŻONY
+          </p>
+        </div>
+
+        {step === 'credentials' && (
+          <form onSubmit={handleCredentials} className="flex flex-col gap-4">
+            <div className="relative">
+              <input
+                type={showPass ? 'text' : 'password'}
+                placeholder="Hasło administratora"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                className="input-amber pr-12"
+                autoFocus
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPass(v => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2"
+                style={{ color: '#555', background: 'none', border: 'none', cursor: 'pointer' }}
+              >
+                {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+
+            {error && (
+              <p className="font-body text-xs text-center" style={{ color: '#ff4444' }}>{error}</p>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading || !password}
+              className="font-ui font-bold text-sm py-4 uppercase tracking-widest transition-all duration-300 mt-2"
+              style={{
+                background: password ? '#FFC107' : 'rgba(255,193,7,0.15)',
+                color: password ? '#000' : '#555',
+                border: `1px solid ${password ? '#FFC107' : 'rgba(255,193,7,0.2)'}`,
+                cursor: password ? 'pointer' : 'not-allowed',
+                opacity: loading ? 0.7 : 1,
+              }}
+            >
+              {loading ? 'Weryfikacja...' : 'Zaloguj się'}
+            </button>
+
+            <p className="font-body text-xs text-center mt-2" style={{ color: '#333' }}>
+              Domyślne hasło: NorbertAdmin2024!
+            </p>
+          </form>
+        )}
+
+        {step === 'totp' && (
+          <form onSubmit={handleTotpVerify} className="flex flex-col items-center gap-6">
+            <div className="text-center">
+              <p className="font-ui text-sm mb-1" style={{ color: '#A1A1AA' }}>Weryfikacja dwuetapowa</p>
+              <p className="font-body text-xs" style={{ color: '#555' }}>Wprowadź 6-cyfrowy kod z aplikacji Authenticator</p>
+            </div>
+
+            <div className="flex gap-2">
+              {totpCode.map((digit, idx) => (
+                <input
+                  key={idx}
+                  ref={el => totpRefs.current[idx] = el}
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={1}
+                  value={digit}
+                  onChange={e => handleTotpChange(idx, e.target.value)}
+                  onKeyDown={e => handleTotpKeyDown(idx, e)}
+                  onPaste={idx === 0 ? handleTotpPaste : undefined}
+                  className={`totp-box ${digit ? 'filled' : ''}`}
+                  autoFocus={idx === 0}
+                />
+              ))}
+            </div>
+
+            {error && (
+              <p className="font-body text-xs text-center" style={{ color: '#ff4444' }}>{error}</p>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading || totpCode.join('').length < 6}
+              className="w-full font-ui font-bold text-sm py-4 uppercase tracking-widest transition-all duration-300"
+              style={{
+                background: totpCode.join('').length === 6 ? '#FFC107' : 'rgba(255,193,7,0.15)',
+                color: totpCode.join('').length === 6 ? '#000' : '#555',
+                border: `1px solid ${totpCode.join('').length === 6 ? '#FFC107' : 'rgba(255,193,7,0.2)'}`,
+                cursor: totpCode.join('').length === 6 ? 'pointer' : 'not-allowed',
+                opacity: loading ? 0.7 : 1,
+              }}
+            >
+              {loading ? 'Weryfikacja...' : 'Zweryfikuj kod'}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => { setStep('credentials'); setTotpCode(['','','','','','']); setError(''); }}
+              className="font-ui text-xs"
+              style={{ color: '#555', background: 'none', border: 'none', cursor: 'pointer' }}
+            >
+              ← Wróć do logowania
+            </button>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}

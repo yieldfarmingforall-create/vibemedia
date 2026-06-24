@@ -1,0 +1,22 @@
+{
+  "name": "PageContent",
+  "type": "object",
+  "properties": {
+    "pageKey": {
+      "type": "string",
+      "description": "Unique key identifying the page and content block, e.g. 'home.hero.h1'"
+    },
+    "value": {
+      "type": "string",
+      "description": "Text content value"
+    },
+    "label": {
+      "type": "string",
+      "description": "Human-readable label for admin panel display"
+    }
+  },
+  "required": [
+    "pageKey",
+    "value"
+  ]
+}

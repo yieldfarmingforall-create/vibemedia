@@ -1,0 +1,65 @@
+{
+  "name": "Client",
+  "type": "object",
+  "properties": {
+    "serviceId": {
+      "type": "string",
+      "description": "ID of the chosen service"
+    },
+    "serviceName": {
+      "type": "string",
+      "description": "Name of chosen service at time of booking"
+    },
+    "slotId": {
+      "type": "string",
+      "description": "ID of the booked AvailableSlot"
+    },
+    "slotDate": {
+      "type": "string",
+      "description": "Date of the consultation"
+    },
+    "slotTime": {
+      "type": "string",
+      "description": "Time of the consultation"
+    },
+    "contactEmail": {
+      "type": "string",
+      "description": "Client email"
+    },
+    "contactName": {
+      "type": "string",
+      "description": "Client full name"
+    },
+    "contactPhone": {
+      "type": "string",
+      "description": "Client phone number"
+    },
+    "surveyAnswers": {
+      "type": "string",
+      "description": "JSON stringified array of {questionId, questionText, answer}"
+    },
+    "stripeSessionId": {
+      "type": "string",
+      "description": "Stripe Checkout session ID"
+    },
+    "paymentStatus": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "paid",
+        "failed"
+      ],
+      "default": "pending",
+      "description": "Payment status"
+    },
+    "amountPaid": {
+      "type": "number",
+      "description": "Amount paid in grosz/cents"
+    }
+  },
+  "required": [
+    "serviceId",
+    "slotId",
+    "paymentStatus"
+  ]
+}

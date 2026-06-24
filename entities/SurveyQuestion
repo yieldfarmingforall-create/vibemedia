@@ -1,0 +1,34 @@
+{
+  "name": "SurveyQuestion",
+  "type": "object",
+  "properties": {
+    "text": {
+      "type": "string",
+      "description": "Question text displayed to user"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "open",
+        "closed"
+      ],
+      "description": "open = textarea input, closed = ABCD multiple choice"
+    },
+    "options": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Answer options for closed questions (A, B, C, D)"
+    },
+    "order": {
+      "type": "number",
+      "description": "Display order"
+    }
+  },
+  "required": [
+    "text",
+    "type",
+    "order"
+  ]
+}

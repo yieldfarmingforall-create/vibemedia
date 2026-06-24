@@ -1,0 +1,27 @@
+{
+  "name": "AvailableSlot",
+  "type": "object",
+  "properties": {
+    "date": {
+      "type": "string",
+      "description": "Date in YYYY-MM-DD format"
+    },
+    "time": {
+      "type": "string",
+      "description": "Time in HH:MM format"
+    },
+    "isBooked": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the slot has been booked"
+    },
+    "bookedByClientId": {
+      "type": "string",
+      "description": "Client ID who booked this slot"
+    }
+  },
+  "required": [
+    "date",
+    "time"
+  ]
+}
