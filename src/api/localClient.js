@@ -23,9 +23,23 @@ function makeEntity(path) {
       return apiFetch(`${path}${q ? '?' + q : ''}`);
     },
     filter: (where) => {
-      const p = new URLSearchParams(
-        Object.entries(where).map(([k, v]) => [k, String(v)])
-      );
+      const p = new URLSearchParams();
+      for (const [k, v] of Object.entries(where)) {
+        if (v !== null && typeof v === 'object') {
+          if (v.$regex) {
+            // Convert MongoDB-style $regex to a prefix/LIKE search
+            // e.g. { $regex: '^home\\.' } → key_prefix=home.
+            const prefixMatch = v.$regex.match(/^\^([^$.*+?[\]{}|()\\]+)/);
+            if (prefixMatch) {
+              p.set(k + '_prefix', prefixMatch[1]);
+            } else {
+              p.set(k + '_like', v.$regex.replace(/^\^/, '').replace(/\$.*/, ''));
+            }
+          }
+        } else {
+          p.set(k, String(v));
+        }
+      }
       return apiFetch(`${path}?${p.toString()}`);
     },
     create: (data) =>

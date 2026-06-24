@@ -214,9 +214,8 @@ export default function Home() {
           <p
             className="font-heading mt-3 mb-10 tracking-widest uppercase"
             style={{ fontSize: 'clamp(1rem, 2.5vw, 1.4rem)', color: '#A1A1AA', fontWeight: 500, letterSpacing: '0.3em' }}
-          >
-            {pageContent['home.hero.name'] || 'Norbert Rzepka'}
-          </p>
+            dangerouslySetInnerHTML={{ __html: pageContent['home.hero.name'] || 'Norbert Rzepka' }}
+          />
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 flex-wrap">
             <AmberButton to="/uslugi">Usługi</AmberButton>
@@ -238,9 +237,8 @@ export default function Home() {
         <h2
           className="font-heading text-center mb-12"
           style={{ fontSize: 'clamp(1.8rem, 4vw, 3rem)', fontWeight: 800, color: '#FFC107' }}
-        >
-          {pageContent['home.reviews.title'] || 'Wyniki i opinie moich klientów'}
-        </h2>
+          dangerouslySetInnerHTML={{ __html: pageContent['home.reviews.title'] || 'Wyniki i opinie moich klientów' }}
+        />
 
         {/* TAB SWITCHER */}
         <div className="flex justify-center gap-2 mb-12">
@@ -335,12 +333,12 @@ export default function Home() {
         style={{ borderTop: '1px solid rgba(255,193,7,0.1)' }}
       >
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-          <h2 className="font-heading mb-4" style={{ fontSize: 'clamp(1.5rem, 4vw, 2.5rem)', fontWeight: 800, color: '#FFC107' }}>
-            {pageContent['home.contact.title'] || 'Gotowy na wzrost?'}
-          </h2>
-          <p className="font-body mb-8" style={{ color: '#A1A1AA', lineHeight: 1.7, fontSize: '1rem' }}>
-            {pageContent['home.contact.desc'] || 'Umów się na bezpłatną konsultację i dowiedz się, jak skalować swoją agencję z moją pomocą.'}
-          </p>
+          <h2 className="font-heading mb-4" style={{ fontSize: 'clamp(1.5rem, 4vw, 2.5rem)', fontWeight: 800, color: '#FFC107' }}
+            dangerouslySetInnerHTML={{ __html: pageContent['home.contact.title'] || 'Gotowy na wzrost?' }}
+          />
+          <p className="font-body mb-8" style={{ color: '#A1A1AA', lineHeight: 1.7, fontSize: '1rem' }}
+            dangerouslySetInnerHTML={{ __html: pageContent['home.contact.desc'] || 'Umów się na bezpłatną konsultację i dowiedz się, jak skalować swoją agencję z moją pomocą.' }}
+          />
           <AmberButton to="/konsultacja">Umów konsultację</AmberButton>
         </div>
       </section>

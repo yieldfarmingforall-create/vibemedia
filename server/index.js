@@ -96,9 +96,13 @@ const pcSel = `SELECT id, page_key AS "pageKey", value, label, created_at AS "cr
 app.get('/api/page-content', async (req, res) => {
   try {
     const { _sort, _limit, pageKey, id } = req.query;
+    const pageKey_prefix = req.query['pageKey_prefix'];
+    const pageKey_like   = req.query['pageKey_like'];
     const params = []; const conds = [];
-    if (pageKey) { params.push(pageKey); conds.push(`page_key=$${params.length}`); }
-    if (id)      { params.push(id);      conds.push(`id::text=$${params.length}`); }
+    if (pageKey)        { params.push(pageKey);               conds.push(`page_key=$${params.length}`); }
+    if (pageKey_prefix) { params.push(pageKey_prefix + '%');  conds.push(`page_key LIKE $${params.length}`); }
+    if (pageKey_like)   { params.push('%' + pageKey_like + '%'); conds.push(`page_key LIKE $${params.length}`); }
+    if (id)             { params.push(id);                    conds.push(`id::text=$${params.length}`); }
     const where = conds.length ? ` WHERE ${conds.join(' AND ')}` : '';
     const limit = _limit ? ` LIMIT ${Math.min(parseInt(_limit)||100,500)}` : '';
     const r = await pool.query(`${pcSel}${where} ORDER BY ${orderBy(_sort)}${limit}`, params);
