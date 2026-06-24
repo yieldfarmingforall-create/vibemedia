@@ -32,6 +32,8 @@ function TabText() {
       (data || []).forEach(d => { map[d.pageKey] = d; });
       const merged = defaultContent.map(def => map[def.pageKey] ? { ...def, ...map[def.pageKey] } : def);
       setItems(merged);
+    }).catch(() => {
+      setItems(defaultContent);
     });
   }, []);
 
@@ -97,7 +99,7 @@ function TabReviews() {
   const [editDesc, setEditDesc] = useState({});
   const fileRef = useRef(null);
 
-  const load = () => base44.entities.Review.list('order', 100).then(data => setReviews(data || []));
+  const load = () => base44.entities.Review.list('order', 100).then(data => setReviews(data || [])).catch(() => {});
   useEffect(() => { load(); }, []);
 
   const handleUpload = async (e) => {
@@ -191,16 +193,23 @@ function TabServices() {
   ];
 
   const load = async () => {
-    const data = await base44.entities.Service.list('order', 10);
-    if (data && data.length > 0) {
-      setServices(data);
-    } else {
-      // Seed defaults
-      for (const svc of defaultServices) {
-        await base44.entities.Service.create(svc);
+    try {
+      const data = await base44.entities.Service.list('order', 10);
+      if (data && data.length > 0) {
+        setServices(data);
+      } else {
+        try {
+          for (const svc of defaultServices) {
+            await base44.entities.Service.create(svc);
+          }
+          const fresh = await base44.entities.Service.list('order', 10);
+          setServices(fresh || defaultServices);
+        } catch {
+          setServices(defaultServices);
+        }
       }
-      const fresh = await base44.entities.Service.list('order', 10);
-      setServices(fresh || []);
+    } catch {
+      setServices(defaultServices);
     }
   };
 
@@ -271,7 +280,7 @@ function TabQuestions() {
   const [newQ, setNewQ] = useState({ text: '', type: 'open', options: ['', '', '', ''] });
   const [adding, setAdding] = useState(false);
 
-  const load = () => base44.entities.SurveyQuestion.list('order', 50).then(d => setQuestions(d || []));
+  const load = () => base44.entities.SurveyQuestion.list('order', 50).then(d => setQuestions(d || [])).catch(() => {});
   useEffect(() => { load(); }, []);
 
   const handleAdd = async () => {
@@ -414,7 +423,7 @@ function TabSlots() {
   const [saving, setSaving] = useState(false);
   const [filterDate, setFilterDate] = useState('');
 
-  const load = () => base44.entities.AvailableSlot.list('-date', 200).then(d => setSlots(d || []));
+  const load = () => base44.entities.AvailableSlot.list('-date', 200).then(d => setSlots(d || [])).catch(() => {});
   useEffect(() => { load(); }, []);
 
   const handleAddSlots = async () => {
@@ -552,7 +561,7 @@ function TabCRM() {
     const map = {};
     (svcs || []).forEach(s => { map[s.id] = s; });
     setServices(map);
-  });
+  }).catch(() => {});
 
   useEffect(() => { load(); }, []);
 
