@@ -33,24 +33,28 @@ export default function AdminLogin() {
     e.preventDefault();
     setError('');
     setLoading(true);
+
+    let storedPassword = DEFAULT_PASSWORD;
     try {
-      // Load stored password or use default
       const stored = await base44.entities.AdminSettings.filter({ settingKey: 'adminPassword' });
-      const storedPassword = stored && stored[0] ? stored[0].value : DEFAULT_PASSWORD;
-      if (password !== storedPassword) {
-        setError('Nieprawidłowe hasło.');
-        setLoading(false);
-        return;
-      }
-      if (twoFAEnabled) {
-        setStep('totp');
-      } else {
-        sessionStorage.setItem(SESSION_KEY, 'authenticated');
-        navigate('/management-dashboard-secure-nr7x912/dashboard');
-      }
-    } catch (e) {
-      setError('Błąd połączenia. Spróbuj ponownie.');
+      if (stored && stored[0]) storedPassword = stored[0].value;
+    } catch {
+      // Backend niedostępny — używamy domyślnego hasła
     }
+
+    if (password !== storedPassword) {
+      setError('Nieprawidłowe hasło.');
+      setLoading(false);
+      return;
+    }
+
+    if (twoFAEnabled) {
+      setStep('totp');
+    } else {
+      sessionStorage.setItem(SESSION_KEY, 'authenticated');
+      navigate('/management-dashboard-secure-nr7x912/dashboard');
+    }
+
     setLoading(false);
   };
 
