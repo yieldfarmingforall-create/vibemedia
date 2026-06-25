@@ -739,6 +739,8 @@ function TabSettings() {
   const navigate = useNavigate();
   const [twoFAEnabled, setTwoFAEnabled] = useState(false);
   const [newPass, setNewPass] = useState('');
+  const [stripeStatus, setStripeStatus] = useState(null);
+  const [stripeLoading, setStripeLoading] = useState(false);
   const [confirmPass, setConfirmPass] = useState('');
   const [totpToDisable, setTotpToDisable] = useState(['','','','','','']);
   const totpDisableRefs = useRef([]);
@@ -871,9 +873,124 @@ function TabSettings() {
     </div>
   );
 
+  const checkStripe = async () => {
+    setStripeLoading(true);
+    try {
+      const data = await fetch('/api/stripe/health').then(r => r.json());
+      setStripeStatus(data);
+    } catch (e) {
+      setStripeStatus({ ok: false, error: e.message });
+    } finally {
+      setStripeLoading(false);
+    }
+  };
+
+  const webhookUrl = typeof window !== 'undefined'
+    ? `${window.location.origin}/api/stripe/webhook`
+    : '/api/stripe/webhook';
+
   return (
     <div className="flex flex-col gap-8">
       <h2 className="font-heading font-black text-xl" style={{ color: '#FFC107' }}>Ustawienia</h2>
+
+      {/* STRIPE STATUS */}
+      <div className="p-6" style={{ background: '#0A0A0A', border: '1px solid rgba(255,193,7,0.15)', borderRadius: '4px' }}>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-ui font-bold text-sm uppercase tracking-widest" style={{ color: '#FFC107' }}>Stripe — status połączenia</h3>
+          <button onClick={checkStripe} disabled={stripeLoading}
+            className="font-ui font-bold text-xs px-4 py-2 uppercase tracking-widest transition-all duration-200"
+            style={{ background: 'rgba(255,193,7,0.1)', color: '#FFC107', border: '1px solid rgba(255,193,7,0.3)', cursor: 'pointer', opacity: stripeLoading ? 0.6 : 1 }}>
+            {stripeLoading ? 'Sprawdzam...' : 'Sprawdź połączenie'}
+          </button>
+        </div>
+
+        {stripeStatus && (
+          <div className="mb-4 animate-fade-in">
+            {stripeStatus.ok ? (
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <span style={{ color: '#00C864', fontSize: '1rem' }}>✓</span>
+                  <span className="font-ui text-sm font-bold" style={{ color: '#00C864' }}>Połączono ze Stripe</span>
+                  <span className="font-ui text-xs px-2 py-0.5" style={{
+                    background: stripeStatus.mode === 'test' ? 'rgba(255,193,7,0.15)' : 'rgba(0,200,100,0.15)',
+                    color: stripeStatus.mode === 'test' ? '#FFC107' : '#00C864',
+                    border: `1px solid ${stripeStatus.mode === 'test' ? 'rgba(255,193,7,0.4)' : 'rgba(0,200,100,0.4)'}`,
+                    borderRadius: '2px',
+                  }}>
+                    {stripeStatus.mode === 'test' ? 'TRYB TESTOWY' : 'TRYB LIVE'}
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+                  <div className="p-2" style={{ background: '#111', borderRadius: '2px', border: '1px solid #222' }}>
+                    <p className="font-ui text-xs" style={{ color: '#555' }}>Płatności aktywne</p>
+                    <p className="font-ui text-sm font-bold" style={{ color: stripeStatus.chargesEnabled ? '#00C864' : '#ff6666' }}>
+                      {stripeStatus.chargesEnabled ? '✓ Tak' : '✕ Nie — dokończ konfigurację konta w Stripe'}
+                    </p>
+                  </div>
+                  <div className="p-2" style={{ background: '#111', borderRadius: '2px', border: '1px solid #222' }}>
+                    <p className="font-ui text-xs" style={{ color: '#555' }}>Dane konta przesłane</p>
+                    <p className="font-ui text-sm font-bold" style={{ color: stripeStatus.detailsSubmitted ? '#00C864' : '#FFC107' }}>
+                      {stripeStatus.detailsSubmitted ? '✓ Tak' : '⚠ Nie — uzupełnij dane w Stripe Dashboard'}
+                    </p>
+                  </div>
+                  {stripeStatus.email && (
+                    <div className="p-2" style={{ background: '#111', borderRadius: '2px', border: '1px solid #222' }}>
+                      <p className="font-ui text-xs" style={{ color: '#555' }}>E-mail konta Stripe</p>
+                      <p className="font-ui text-sm" style={{ color: '#FFF' }}>{stripeStatus.email}</p>
+                    </div>
+                  )}
+                  <div className="p-2" style={{ background: '#111', borderRadius: '2px', border: '1px solid #222' }}>
+                    <p className="font-ui text-xs" style={{ color: '#555' }}>Kraj</p>
+                    <p className="font-ui text-sm font-bold" style={{ color: '#FFF' }}>{stripeStatus.country?.toUpperCase() || '—'}</p>
+                  </div>
+                </div>
+                {!stripeStatus.chargesEnabled && (
+                  <div className="mt-3 p-3" style={{ background: 'rgba(255,80,80,0.06)', border: '1px solid rgba(255,80,80,0.25)', borderRadius: '4px' }}>
+                    <p className="font-body text-xs" style={{ color: '#ff8888', lineHeight: 1.7 }}>
+                      <strong>Konto Stripe wymaga aktywacji.</strong> Przejdź do{' '}
+                      <a href="https://dashboard.stripe.com/settings/account" target="_blank" rel="noreferrer" style={{ color: '#FFC107', textDecoration: 'underline' }}>
+                        Stripe Dashboard → Ustawienia konta
+                      </a>{' '}
+                      i uzupełnij dane weryfikacyjne (tożsamość, konto bankowe). Dopiero po aktywacji będą możliwe prawdziwe płatności.
+                    </p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="p-3" style={{ background: 'rgba(255,80,80,0.06)', border: '1px solid rgba(255,80,80,0.3)', borderRadius: '4px' }}>
+                <p className="font-ui text-xs font-bold mb-1" style={{ color: '#ff6666' }}>✕ Błąd połączenia ze Stripe</p>
+                <p className="font-body text-xs" style={{ color: '#999' }}>{stripeStatus.error}</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Webhook URL */}
+        <div className="mt-4 p-4" style={{ background: 'rgba(255,193,7,0.03)', border: '1px solid rgba(255,193,7,0.15)', borderRadius: '4px' }}>
+          <p className="font-ui text-xs uppercase tracking-widest mb-2" style={{ color: '#A1A1AA' }}>URL Webhooka Stripe</p>
+          <p className="font-body text-xs mb-3" style={{ color: '#666', lineHeight: 1.7 }}>
+            Zarejestruj ten adres w{' '}
+            <a href="https://dashboard.stripe.com/webhooks" target="_blank" rel="noreferrer" style={{ color: '#FFC107', textDecoration: 'underline' }}>
+              Stripe Dashboard → Webhooks → Add endpoint
+            </a>
+            . Zdarzenia do nasłuchiwania: <code style={{ color: '#FFC107' }}>checkout.session.completed</code> i <code style={{ color: '#FFC107' }}>checkout.session.expired</code>.
+          </p>
+          <div className="flex items-center gap-2">
+            <code className="font-ui text-xs flex-1 px-3 py-2" style={{ background: '#111', color: '#FFC107', border: '1px solid rgba(255,193,7,0.2)', borderRadius: '2px', wordBreak: 'break-all' }}>
+              {webhookUrl}
+            </code>
+            <button
+              onClick={() => navigator.clipboard?.writeText(webhookUrl)}
+              className="font-ui text-xs px-3 py-2 flex-shrink-0 transition-all duration-200"
+              style={{ background: 'rgba(255,193,7,0.1)', color: '#FFC107', border: '1px solid rgba(255,193,7,0.3)', cursor: 'pointer', borderRadius: '2px' }}>
+              Kopiuj
+            </button>
+          </div>
+          <p className="font-body text-xs mt-2" style={{ color: '#444' }}>
+            ⚠ W środowisku deweloperskim (Replit) webhook działa przez proxy Vite. Po wdrożeniu produkcyjnym URL może być inny.
+          </p>
+        </div>
+      </div>
 
       {/* Change password */}
       <div className="p-6" style={{ background: '#0A0A0A', border: '1px solid rgba(255,193,7,0.15)', borderRadius: '4px' }}>

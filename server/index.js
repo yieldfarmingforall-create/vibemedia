@@ -380,6 +380,67 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
   res.json({ file_url: fileUrl });
 });
 
+// ── STRIPE HEALTH CHECK ───────────────────────────────────────────────────────
+app.get('/api/stripe/health', async (req, res) => {
+  const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
+  if (!STRIPE_SECRET_KEY) return res.json({ ok: false, error: 'STRIPE_SECRET_KEY nie jest ustawiony w zmiennych środowiskowych' });
+  const isTestKey = STRIPE_SECRET_KEY.startsWith('sk_test_');
+  try {
+    const r = await fetch('https://api.stripe.com/v1/account', {
+      headers: { Authorization: `Bearer ${STRIPE_SECRET_KEY}` }
+    });
+    const data = await r.json();
+    if (!r.ok) return res.json({ ok: false, error: data.error?.message || 'Nieprawidłowy klucz API Stripe' });
+    res.json({
+      ok: true,
+      mode: isTestKey ? 'test' : 'live',
+      chargesEnabled: data.charges_enabled,
+      payoutsEnabled: data.payouts_enabled,
+      country: data.country,
+      detailsSubmitted: data.details_submitted,
+      email: data.email,
+    });
+  } catch (e) {
+    res.json({ ok: false, error: e.message });
+  }
+});
+
+// ── STRIPE VERIFY SESSION (serwer weryfikuje płatność po powrocie z Stripe) ───
+app.get('/api/stripe/verify-session/:sessionId', async (req, res) => {
+  const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
+  if (!STRIPE_SECRET_KEY) return res.status(500).json({ error: 'Stripe nie skonfigurowany' });
+  const { sessionId } = req.params;
+  try {
+    const r = await fetch(`https://api.stripe.com/v1/checkout/sessions/${sessionId}`, {
+      headers: { Authorization: `Bearer ${STRIPE_SECRET_KEY}` }
+    });
+    const session = await r.json();
+    if (!r.ok) return res.status(400).json({ error: session.error?.message || 'Stripe error' });
+
+    const clientId = session.client_reference_id || session.metadata?.clientId;
+    const slotId = session.metadata?.slotId;
+
+    if (session.payment_status === 'paid') {
+      if (clientId) {
+        await pool.query(
+          `UPDATE clients SET payment_status='paid', stripe_session_id=$1, amount_paid=$2 WHERE id=$3`,
+          [session.id, session.amount_total, clientId]
+        ).catch(console.error);
+      }
+      if (slotId) {
+        await pool.query(
+          `UPDATE available_slots SET is_booked=true, booked_by_client_id=$1 WHERE id=$2`,
+          [clientId || '', slotId]
+        ).catch(console.error);
+      }
+      return res.json({ paid: true, clientId, amountTotal: session.amount_total });
+    }
+    res.json({ paid: false, paymentStatus: session.payment_status });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ── STRIPE CREATE SESSION ─────────────────────────────────────────────────────
 app.post('/api/stripe/create-session', async (req, res) => {
   const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
@@ -389,7 +450,8 @@ app.post('/api/stripe/create-session', async (req, res) => {
   if (!clientId || !priceGrosze) return res.status(400).json({ error: 'Missing required fields' });
 
   const origin = req.headers.origin || `${req.protocol}://${req.get('host')}`;
-  const successUrl = `${origin}/platnosc?status=success&clientId=${clientId}`;
+  // {CHECKOUT_SESSION_ID} is a Stripe template variable — Stripe replaces it with the real session ID
+  const successUrl = `${origin}/platnosc?status=success&clientId=${clientId}&session_id={CHECKOUT_SESSION_ID}`;
   const cancelUrl  = `${origin}/platnosc?status=cancel&clientId=${clientId}&serviceId=${serviceId}&slotId=${slotId || ''}`;
 
   const params = new URLSearchParams();
@@ -416,6 +478,13 @@ app.post('/api/stripe/create-session', async (req, res) => {
 
   const session = await response.json();
   if (!response.ok) return res.status(400).json({ error: session.error?.message || 'Stripe error' });
+
+  // Save session ID to client record immediately (webhook also updates this, but this is a safety net)
+  await pool.query(
+    `UPDATE clients SET stripe_session_id=$1 WHERE id=$2`,
+    [session.id, clientId]
+  ).catch(console.error);
+
   res.json({ url: session.url, sessionId: session.id });
 });
 
