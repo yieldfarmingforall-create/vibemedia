@@ -687,24 +687,24 @@ function TabCRM() {
                       </div>
                     </div>
                     {client.stripeSessionId && (
-                      <div className="mb-4 p-3" style={{ background: 'rgba(255,193,7,0.03)', border: '1px solid rgba(255,193,7,0.1)', borderRadius: '2px' }}>
-                        <label className="font-ui text-xs uppercase tracking-widest block mb-1" style={{ color: '#A1A1AA' }}>Stripe Session ID</label>
+                      <div className="mb-4 p-3" style={{ background: 'rgba(0,200,100,0.04)', border: '1px solid rgba(0,200,100,0.2)', borderRadius: '2px' }}>
+                        <label className="font-ui text-xs uppercase tracking-widest block mb-1" style={{ color: '#00C864' }}>Stripe — płatność zrealizowana</label>
                         <code className="font-ui text-xs" style={{ color: '#FFC107' }}>{client.stripeSessionId}</code>
                         <p className="font-body text-xs mt-1" style={{ color: '#555' }}>
                           Zweryfikuj w{' '}
-                          <a href={`https://dashboard.stripe.com/payments`} target="_blank" rel="noreferrer"
+                          <a href="https://dashboard.stripe.com/payments" target="_blank" rel="noreferrer"
                             style={{ color: '#FFC107', textDecoration: 'underline' }}>
                             Stripe Dashboard
                           </a>
-                          {' '}— wyszukaj po client_reference_id: <code style={{ color: '#FFC107' }}>{client.id}</code>
                         </p>
                       </div>
                     )}
                     {!client.stripeSessionId && (
-                      <div className="mb-4 p-3" style={{ background: 'rgba(255,193,7,0.03)', border: '1px solid rgba(255,193,7,0.1)', borderRadius: '2px' }}>
-                        <p className="font-body text-xs" style={{ color: '#555' }}>
-                          Aby zweryfikować płatność w Stripe, wyszukaj po <strong style={{ color: '#FFC107' }}>client_reference_id: {client.id}</strong> w{' '}
-                          <a href="https://dashboard.stripe.com/payments" target="_blank" rel="noreferrer" style={{ color: '#FFC107', textDecoration: 'underline' }}>Stripe Dashboard</a>.
+                      <div className="mb-4 p-3" style={{ background: 'rgba(255,80,80,0.04)', border: '1px solid rgba(255,80,80,0.2)', borderRadius: '2px' }}>
+                        <label className="font-ui text-xs uppercase tracking-widest block mb-1" style={{ color: '#ff6666' }}>Płatność niezrealizowana</label>
+                        <p className="font-body text-xs" style={{ color: '#999' }}>
+                          Klient wypełnił formularz, ale <strong style={{ color: '#ff6666' }}>nie ukończył płatności</strong> przez Stripe.
+                          Ten wpis można zignorować lub ręcznie usunąć.
                         </p>
                       </div>
                     )}
