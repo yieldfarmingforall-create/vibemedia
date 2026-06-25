@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import multer from 'multer';
 import crypto from 'crypto';
@@ -8,7 +9,7 @@ import pool, { initDb } from './db.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 
 // Multer — file uploads
 const storage = multer.diskStorage({
@@ -492,6 +493,16 @@ app.post('/api/stripe/create-session', async (req, res) => {
 app.use('/api/apps', (req, res) => {
   res.json({ id: null, public_settings: { requiresAuth: false } });
 });
+
+// ── SERVE BUILT FRONTEND (production only) ────────────────────────────────────
+const distPath = path.join(__dirname, '../dist');
+if (fs.existsSync(path.join(distPath, 'index.html'))) {
+  app.use(express.static(distPath));
+  // SPA fallback — React Router handles client-side navigation
+  app.get(/.*/, (req, res) => {
+    res.sendFile(path.join(distPath, 'index.html'));
+  });
+}
 
 // ── START ─────────────────────────────────────────────────────────────────────
 await initDb();
