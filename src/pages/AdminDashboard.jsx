@@ -931,6 +931,60 @@ function TabCRM() {
   );
 }
 
+function TotpInput({ state, setState, refs }) {
+  const handleChange = (index, value) => {
+    const digits = value.replace(/\D/g, '');
+    const digit = digits.slice(-1);
+    setState(previous => {
+      const next = [...previous];
+      next[index] = digit;
+      return next;
+    });
+    if (digit && index < 5) {
+      requestAnimationFrame(() => refs.current[index + 1]?.focus());
+    }
+  };
+
+  const handleKeyDown = (index, event) => {
+    if (event.key === 'Backspace' && !state[index] && index > 0) {
+      refs.current[index - 1]?.focus();
+    }
+    if (event.key === 'ArrowLeft' && index > 0) {
+      refs.current[index - 1]?.focus();
+    }
+    if (event.key === 'ArrowRight' && index < 5) {
+      refs.current[index + 1]?.focus();
+    }
+  };
+
+  const handlePaste = (event) => {
+    event.preventDefault();
+    const pasted = event.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    setState(Array.from({ length: 6 }, (_, index) => pasted[index] || ''));
+    refs.current[Math.min(pasted.length, 5)]?.focus();
+  };
+
+  return (
+    <div className="flex gap-2">
+      {state.map((digit, index) => (
+        <input
+          key={index}
+          ref={element => { refs.current[index] = element; }}
+          type="text"
+          inputMode="numeric"
+          maxLength={1}
+          value={digit}
+          onChange={event => handleChange(index, event.target.value)}
+          onKeyDown={event => handleKeyDown(index, event)}
+          onPaste={index === 0 ? handlePaste : undefined}
+          className={`totp-box ${digit ? 'filled' : ''}`}
+          style={{ width: 40, height: 48 }}
+        />
+      ))}
+    </div>
+  );
+}
+
 // ===== TAB: SETTINGS =====
 function TabSettings() {
   const navigate = useNavigate();
@@ -958,6 +1012,10 @@ function TabSettings() {
   useEffect(() => {
     if (showSetup) setupRefs.current[0]?.focus();
   }, [showSetup]);
+
+  useEffect(() => {
+    if (showDisableForm) totpDisableRefs.current[0]?.focus();
+  }, [showDisableForm]);
 
   const saveOrUpdate = async (key, value) => {
     const existing = await base44.entities.AdminSettings.filter({ settingKey: key });
@@ -1027,50 +1085,10 @@ function TabSettings() {
     setTimeout(() => setTwoFAMsg(''), 3000);
   };
 
-  const handleTotpChange = (refs, state, setState) => (idx, val) => {
-    const v = val.replace(/\D/g, '').slice(-1);
-    const next = [...state];
-    next[idx] = v;
-    setState(next);
-    if (v && idx < 5) refs.current[idx + 1]?.focus();
-  };
-
-  const handleTotpKeyDown = (refs, state) => (idx, e) => {
-    if (e.key === 'Backspace' && !state[idx] && idx > 0) refs.current[idx - 1]?.focus();
-  };
-
-  const handleTotpPaste = (setState, refs) => (e) => {
-    e.preventDefault();
-    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
-    const next = Array(6).fill('').map((_, i) => pasted[i] || '');
-    setState(next);
-    refs.current[Math.min(pasted.length, 5)]?.focus();
-  };
-
   const handleLogout = () => {
     sessionStorage.removeItem(SESSION_KEY);
     navigate('/management-dashboard-secure-nr7x912');
   };
-
-  const TotpInput = ({ state, setState, refs }) => (
-    <div className="flex gap-2">
-      {state.map((digit, idx) => (
-        <input
-          key={idx}
-          ref={el => refs.current[idx] = el}
-          type="text"
-          inputMode="numeric"
-          maxLength={1}
-          value={digit}
-          onChange={e => handleTotpChange(refs, state, setState)(idx, e.target.value)}
-          onKeyDown={e => handleTotpKeyDown(refs, state)(idx, e)}
-          onPaste={idx === 0 ? handleTotpPaste(setState, refs) : undefined}
-          className={`totp-box ${digit ? 'filled' : ''}`}
-          style={{ width: 40, height: 48 }}
-        />
-      ))}
-    </div>
-  );
 
   return (
     <div className="flex flex-col gap-8">
