@@ -29,6 +29,10 @@ export default function AdminLogin() {
     }).catch(() => {});
   }, []);
 
+  useEffect(() => {
+    if (step === 'totp') totpRefs.current[0]?.focus();
+  }, [step]);
+
   const handleCredentials = async (e) => {
     e.preventDefault();
     setError('');
@@ -195,7 +199,6 @@ export default function AdminLogin() {
                   onKeyDown={e => handleTotpKeyDown(idx, e)}
                   onPaste={idx === 0 ? handleTotpPaste : undefined}
                   className={`totp-box ${digit ? 'filled' : ''}`}
-                  autoFocus={idx === 0}
                 />
               ))}
             </div>

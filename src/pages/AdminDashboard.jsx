@@ -955,6 +955,10 @@ function TabSettings() {
     });
   }, []);
 
+  useEffect(() => {
+    if (showSetup) setupRefs.current[0]?.focus();
+  }, [showSetup]);
+
   const saveOrUpdate = async (key, value) => {
     const existing = await base44.entities.AdminSettings.filter({ settingKey: key });
     if (existing && existing[0]) {
@@ -1035,11 +1039,12 @@ function TabSettings() {
     if (e.key === 'Backspace' && !state[idx] && idx > 0) refs.current[idx - 1]?.focus();
   };
 
-  const handleTotpPaste = (setState) => (e) => {
+  const handleTotpPaste = (setState, refs) => (e) => {
     e.preventDefault();
     const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
     const next = Array(6).fill('').map((_, i) => pasted[i] || '');
     setState(next);
+    refs.current[Math.min(pasted.length, 5)]?.focus();
   };
 
   const handleLogout = () => {
@@ -1059,8 +1064,7 @@ function TabSettings() {
           value={digit}
           onChange={e => handleTotpChange(refs, state, setState)(idx, e.target.value)}
           onKeyDown={e => handleTotpKeyDown(refs, state)(idx, e)}
-          onPaste={idx === 0 ? handleTotpPaste(setState) : undefined}
-          autoFocus={idx === 0}
+          onPaste={idx === 0 ? handleTotpPaste(setState, refs) : undefined}
           className={`totp-box ${digit ? 'filled' : ''}`}
           style={{ width: 40, height: 48 }}
         />
