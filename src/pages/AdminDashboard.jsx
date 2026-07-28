@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import {
   Type, Image, Briefcase, HelpCircle, Users, Settings,
   Plus, Trash2, Save, Upload, LogOut, ChevronDown, ChevronUp,
-  Eye, EyeOff, Check, X
+  Eye, EyeOff, Check, X, Calendar, Layers, ListOrdered
 } from 'lucide-react';
 import { generateTotpSecret, verifyTotp, buildOtpAuthUri } from '@/lib/totp';
 import WysiwygEditor from '@/components/WysiwygEditor';
@@ -24,6 +24,36 @@ function TabText() {
     { pageKey: 'home.contact.title', label: 'Strona główna – Tytuł sekcji Kontakt', value: 'Gotowy na wzrost?' },
     { pageKey: 'home.contact.desc', label: 'Strona główna – Opis sekcji Kontakt', value: 'Umów się na bezpłatną konsultację i dowiedz się, jak skalować swoją agencję z moją pomocą.' },
     { pageKey: 'services.title', label: 'Usługi – Tytuł strony', value: 'USŁUGI' },
+    { pageKey: 'home.ticker.items', label: 'Pasek Ticker (hasła oddzielone |)', value: 'COLD E-MAIL & LINKEDIN | CIEPŁE LEADY B2B | KALENDARZ PEŁEN SPOTKAŃ | ROZMOWY NA KONKRETNĄ GODZINĘ | KWALIFIKACJA BUDŻETU', plain: true },
+    { pageKey: 'home.intro.label', label: 'Intro – Etykieta', value: 'Przyjmujemy 3 nowych klientów w tym miesiącu' },
+    { pageKey: 'home.intro.h2', label: 'Intro – Nagłówek', value: 'Pozyskujemy rozmowy sprzedażowe na konkretną godzinę — z klientami zainteresowanymi Twoją ofertą.' },
+    { pageKey: 'home.intro.desc', label: 'Intro – Opis', value: 'Bez reklam i bez cold calli z Twojej strony. Zanim ktokolwiek trafi do Twojego kalendarza, rozmawiamy z nim 10–20 minut: badamy potrzeby, budżet i cele, przedstawiamy Twoją ofertę. Ty wchodzisz na rozmowę z kimś, kto wie, po co rozmawiacie — i chce kupić.' },
+    { pageKey: 'home.intro.cta', label: 'Intro – Przycisk', value: 'Umów bezpłatną konsultację' },
+    { pageKey: 'home.intro.link', label: 'Intro – Link obok', value: 'Zobacz jak kwalifikujemy' },
+    { pageKey: 'home.intro.checklist', label: 'Intro – Checklist (oddzielone |)', value: 'Bez długoterminowych umów | Rozliczenie za efekty | Pierwsze rozmowy w 14 dni | Bez reklam i bez cold calli z Twojej strony', plain: true },
+    { pageKey: 'home.problem.label', label: 'Problem – Etykieta', value: 'PROBLEM' },
+    { pageKey: 'home.problem.h2', label: 'Problem – Nagłówek', value: 'Świetny w tym, co robisz — ale klienci nie pukają sami.' },
+    { pageKey: 'home.problem.desc', label: 'Problem – Opis', value: 'Większość agencji i freelancerów utyka na tym samym pułapie, bo brakuje im systemu pozyskiwania klientów.' },
+    { pageKey: 'home.solution.label', label: 'Rozwiązanie – Etykieta', value: 'ROZWIĄZANIE' },
+    { pageKey: 'home.solution.h2', label: 'Rozwiązanie – Nagłówek', value: 'Kompletny system pozyskiwania — zrobiony za Ciebie.' },
+    { pageKey: 'home.solution.desc', label: 'Rozwiązanie – Opis', value: 'Nie dostajesz listy kontaktów do obdzwonienia. Dostajesz spotkanie w kalendarzu z osobą, która wie, po co rozmawiacie.' },
+    { pageKey: 'home.forwho.label', label: 'Dla kogo – Etykieta', value: 'DLA KOGO' },
+    { pageKey: 'home.forwho.h2', label: 'Dla kogo – Nagłówek', value: 'Pracujemy z ludźmi, którzy sprzedają konkret.' },
+    { pageKey: 'home.forwho.desc', label: 'Dla kogo – Opis', value: 'Nie umawiamy przypadkowych rozmów. Wybieramy leady, które mają realny budżet, jasny cel i pilny problem. Twoja rola: sprzedać. Nasza: dostarczyć rozmowę.' },
+    { pageKey: 'home.process.label', label: 'Proces – Etykieta', value: 'JAK KWALIFIKUJEMY' },
+    { pageKey: 'home.process.h2', label: 'Proces – Nagłówek', value: 'Każdy lead przechodzi przez nasze sito.' },
+    { pageKey: 'home.process.desc', label: 'Proces – Opis', value: 'Pytamy o budżet, cele i bariery, zanim Ty w ogóle podniesiesz słuchawkę. Do Twojego kalendarza trafiają tylko rozmowy, które mają sens.' },
+    { pageKey: 'home.rules.label', label: 'Zasady – Etykieta', value: 'ZASADY WSPÓŁPRACY' },
+    { pageKey: 'home.rules.h2', label: 'Zasady – Nagłówek', value: 'Płacisz za efekty, nie za obietnice.' },
+    { pageKey: 'home.guarantee.label', label: 'Gwarancja – Etykieta', value: 'GWARANCJA' },
+    { pageKey: 'home.guarantee.h2', label: 'Gwarancja – Nagłówek', value: 'Ryzyko bierzemy na siebie.' },
+    { pageKey: 'home.guarantee.desc', label: 'Gwarancja – Opis', value: 'Płacisz za rozmowy, które realnie się odbyły. Jeśli klient nie pojawi się na potwierdzonym spotkaniu — umawiamy zastępczy termin bez dodatkowych kosztów. Jeśli po pierwszym okresie uznasz, że to nie działa, kończysz współpracę z miesięcznym wypowiedzeniem. Bez kar, bez wieloletnich zobowiązań, bez drobnego druku.' },
+    { pageKey: 'home.faq.label', label: 'FAQ – Etykieta', value: 'FAQ' },
+    { pageKey: 'home.faq.h2', label: 'FAQ – Nagłówek', value: 'Wszystko, o co pytają przed startem.' },
+    { pageKey: 'home.faq.subtitle', label: 'FAQ – Podnagłówek', value: 'Jeśli nie znajdziesz tu odpowiedzi — zadasz pytanie na bezpłatnej konsultacji.' },
+    { pageKey: 'home.prefooter.h2', label: 'Przed stopką – Nagłówek', value: 'Nie znalazłeś odpowiedzi?' },
+    { pageKey: 'home.prefooter.subtitle', label: 'Przed stopką – Podnagłówek', value: 'Zadaj pytanie na 15-minutowej, bezpłatnej konsultacji.' },
+    { pageKey: 'home.prefooter.cta', label: 'Przed stopką – Przycisk', value: 'Umów bezpłatną konsultację' },
   ];
 
   useEffect(() => {
@@ -32,8 +62,6 @@ function TabText() {
       (data || []).forEach(d => { map[d.pageKey] = d; });
       const merged = defaultContent.map(def => map[def.pageKey] ? { ...def, ...map[def.pageKey] } : def);
       setItems(merged);
-    }).catch(() => {
-      setItems(defaultContent);
     });
   }, []);
 
@@ -68,11 +96,15 @@ function TabText() {
           <label className="font-ui text-xs uppercase tracking-widest block mb-2" style={{ color: '#A1A1AA' }}>
             {item.label}
           </label>
-          <WysiwygEditor
-            value={item.value}
-            onChange={val => handleChange(idx, val)}
-            minHeight="80px"
-          />
+          {item.plain ? (
+            <textarea value={item.value} onChange={e => handleChange(idx, e.target.value)} className="input-amber resize-none" rows={3} style={{ minHeight: '80px' }} />
+          ) : (
+            <WysiwygEditor
+              value={item.value}
+              onChange={val => handleChange(idx, val)}
+              minHeight="80px"
+            />
+          )}
           <button
             onClick={() => handleSave(item)}
             className="mt-3 font-ui font-bold text-xs px-4 py-2 uppercase tracking-widest transition-all duration-200 flex items-center gap-2"
@@ -99,7 +131,7 @@ function TabReviews() {
   const [editDesc, setEditDesc] = useState({});
   const fileRef = useRef(null);
 
-  const load = () => base44.entities.Review.list('order', 100).then(data => setReviews(data || [])).catch(() => {});
+  const load = () => base44.entities.Review.list('order', 100).then(data => setReviews(data || []));
   useEffect(() => { load(); }, []);
 
   const handleUpload = async (e) => {
@@ -193,23 +225,16 @@ function TabServices() {
   ];
 
   const load = async () => {
-    try {
-      const data = await base44.entities.Service.list('order', 10);
-      if (data && data.length > 0) {
-        setServices(data);
-      } else {
-        try {
-          for (const svc of defaultServices) {
-            await base44.entities.Service.create(svc);
-          }
-          const fresh = await base44.entities.Service.list('order', 10);
-          setServices(fresh || defaultServices);
-        } catch {
-          setServices(defaultServices);
-        }
+    const data = await base44.entities.Service.list('order', 10);
+    if (data && data.length > 0) {
+      setServices(data);
+    } else {
+      // Seed defaults
+      for (const svc of defaultServices) {
+        await base44.entities.Service.create(svc);
       }
-    } catch {
-      setServices(defaultServices);
+      const fresh = await base44.entities.Service.list('order', 10);
+      setServices(fresh || []);
     }
   };
 
@@ -280,7 +305,7 @@ function TabQuestions() {
   const [newQ, setNewQ] = useState({ text: '', type: 'open', options: ['', '', '', ''] });
   const [adding, setAdding] = useState(false);
 
-  const load = () => base44.entities.SurveyQuestion.list('order', 50).then(d => setQuestions(d || [])).catch(() => {});
+  const load = () => base44.entities.SurveyQuestion.list('order', 50).then(d => setQuestions(d || []));
   useEffect(() => { load(); }, []);
 
   const handleAdd = async () => {
@@ -423,7 +448,7 @@ function TabSlots() {
   const [saving, setSaving] = useState(false);
   const [filterDate, setFilterDate] = useState('');
 
-  const load = () => base44.entities.AvailableSlot.list('-date', 200).then(d => setSlots(d || [])).catch(() => {});
+  const load = () => base44.entities.AvailableSlot.list('-date', 200).then(d => setSlots(d || []));
   useEffect(() => { load(); }, []);
 
   const handleAddSlots = async () => {
@@ -545,6 +570,178 @@ function TabSlots() {
   );
 }
 
+// ===== TAB: MEETINGS =====
+function TabMeetings() {
+  const [meetings, setMeetings] = useState([]);
+  const [meta, setMeta] = useState({ header: '', badge: '', footer: '' });
+  const [newM, setNewM] = useState({ initials: '', name: '', role: '', time: '' });
+  const [saving, setSaving] = useState(null);
+  const [metaSaving, setMetaSaving] = useState(false);
+
+  const DEFAULTS = [
+    { initials: 'AK', name: 'Anna K.',  role: 'CEO · e-commerce, moda',  time: 'DZIŚ 14:00', order: 1 },
+    { initials: 'MN', name: 'Marek N.', role: 'Head of Growth · SaaS',   time: 'JUTRO 10:30', order: 2 },
+    { initials: 'JW', name: 'Julia W.', role: 'Founder · usługi B2B',    time: 'PT 16:00', order: 3 },
+  ];
+
+  const load = async () => {
+    const [ms, cs] = await Promise.all([
+      base44.entities.Meeting.list('order', 20),
+      base44.entities.PageContent.filter({ pageKey: { $regex: '^home\\.meetings\\.' } }),
+    ]);
+    if (ms && ms.length) {
+      setMeetings(ms);
+    } else {
+      for (const d of DEFAULTS) await base44.entities.Meeting.create(d);
+      const fresh = await base44.entities.Meeting.list('order', 20);
+      setMeetings(fresh || []);
+    }
+    const map = {};
+    (cs || []).forEach(c => { map[c.pageKey] = c; });
+    setMeta({
+      header: map['home.meetings.header']?.value || 'Nadchodzące spotkania',
+      badge: map['home.meetings.badge']?.value || 'Na żywo',
+      footer: map['home.meetings.footer']?.value || 'wizualizacja przykładowa',
+    });
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const handleChange = (id, field, val) => {
+    setMeetings(prev => prev.map(m => m.id === id ? { ...m, [field]: val } : m));
+  };
+
+  const handleSave = async (m) => {
+    setSaving(m.id);
+    await base44.entities.Meeting.update(m.id, { initials: m.initials, name: m.name, role: m.role, time: m.time });
+    setSaving(null);
+    load();
+  };
+
+  const handleDelete = async (id) => {
+    if (!confirm('Usunąć to spotkanie?')) return;
+    await base44.entities.Meeting.delete(id);
+    load();
+  };
+
+  const handleAdd = async () => {
+    if (!newM.name.trim() || !newM.time.trim()) return;
+    await base44.entities.Meeting.create({ ...newM, order: meetings.length + 1 });
+    setNewM({ initials: '', name: '', role: '', time: '' });
+    load();
+  };
+
+  const saveMetaItem = async (key, value) => {
+    const existing = await base44.entities.PageContent.filter({ pageKey: key });
+    if (existing && existing[0]) {
+      await base44.entities.PageContent.update(existing[0].id, { value });
+    } else {
+      await base44.entities.PageContent.create({ pageKey: key, value });
+    }
+  };
+
+  const handleSaveMeta = async () => {
+    setMetaSaving(true);
+    await Promise.all([
+      saveMetaItem('home.meetings.header', meta.header),
+      saveMetaItem('home.meetings.badge', meta.badge),
+      saveMetaItem('home.meetings.footer', meta.footer),
+    ]);
+    setMetaSaving(false);
+    load();
+  };
+
+  return (
+    <div className="flex flex-col gap-6">
+      <h2 className="font-heading font-black text-xl" style={{ color: '#FFC107' }}>Nadchodzące spotkania (Hero)</h2>
+
+      {/* Card texts */}
+      <div className="p-6" style={{ background: '#0A0A0A', border: '1px solid rgba(255,193,7,0.25)', borderRadius: '4px' }}>
+        <h3 className="font-ui font-bold text-sm uppercase tracking-widest mb-4" style={{ color: '#FFC107' }}>Teksty karty</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+          <div>
+            <label className="font-ui text-xs uppercase tracking-widest block mb-1" style={{ color: '#A1A1AA' }}>Nagłówek</label>
+            <input type="text" value={meta.header} onChange={e => setMeta(m => ({ ...m, header: e.target.value }))} className="input-amber" />
+          </div>
+          <div>
+            <label className="font-ui text-xs uppercase tracking-widest block mb-1" style={{ color: '#A1A1AA' }}>Znacznik (badge)</label>
+            <input type="text" value={meta.badge} onChange={e => setMeta(m => ({ ...m, badge: e.target.value }))} className="input-amber" />
+          </div>
+          <div>
+            <label className="font-ui text-xs uppercase tracking-widest block mb-1" style={{ color: '#A1A1AA' }}>Stopka</label>
+            <input type="text" value={meta.footer} onChange={e => setMeta(m => ({ ...m, footer: e.target.value }))} className="input-amber" />
+          </div>
+        </div>
+        <button onClick={handleSaveMeta}
+          className="font-ui font-bold text-xs px-4 py-2 uppercase tracking-widest flex items-center gap-2 transition-all duration-200"
+          style={{ background: 'rgba(255,193,7,0.1)', color: '#FFC107', border: '1px solid rgba(255,193,7,0.3)', cursor: 'pointer' }}>
+          <Save size={12} /> {metaSaving ? 'Zapisywanie...' : 'Zapisz teksty'}
+        </button>
+      </div>
+
+      {/* Meetings list */}
+      <div className="flex flex-col gap-3">
+        {meetings.map((m, i) => (
+          <div key={m.id} className="p-4" style={{ background: '#0A0A0A', border: '1px solid rgba(255,193,7,0.15)', borderRadius: '4px' }}>
+            <div className="flex items-center mb-3">
+              <span className="font-ui text-xs font-bold" style={{ color: '#FFC107' }}>#{i + 1}</span>
+              <button onClick={() => handleDelete(m.id)} style={{ color: '#666', background: 'none', border: 'none', cursor: 'pointer', marginLeft: 'auto' }}
+                onMouseEnter={e => e.currentTarget.style.color = '#ff4444'}
+                onMouseLeave={e => e.currentTarget.style.color = '#666'}>
+                <Trash2 size={16} />
+              </button>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+              <div>
+                <label className="font-ui text-xs uppercase tracking-widest block mb-1" style={{ color: '#A1A1AA' }}>Inicjały</label>
+                <input type="text" value={m.initials} onChange={e => handleChange(m.id, 'initials', e.target.value)} className="input-amber" maxLength={3} />
+              </div>
+              <div>
+                <label className="font-ui text-xs uppercase tracking-widest block mb-1" style={{ color: '#A1A1AA' }}>Imię i nazwisko</label>
+                <input type="text" value={m.name} onChange={e => handleChange(m.id, 'name', e.target.value)} className="input-amber" />
+              </div>
+              <div>
+                <label className="font-ui text-xs uppercase tracking-widest block mb-1" style={{ color: '#A1A1AA' }}>Rola / opis</label>
+                <input type="text" value={m.role} onChange={e => handleChange(m.id, 'role', e.target.value)} className="input-amber" />
+              </div>
+              <div>
+                <label className="font-ui text-xs uppercase tracking-widest block mb-1" style={{ color: '#A1A1AA' }}>Data / godzina</label>
+                <input type="text" value={m.time} onChange={e => handleChange(m.id, 'time', e.target.value)} className="input-amber" />
+              </div>
+            </div>
+            <button onClick={() => handleSave(m)}
+              className="mt-3 font-ui text-xs px-3 py-2 flex items-center gap-1 transition-all duration-200"
+              style={{ background: 'rgba(255,193,7,0.1)', color: '#FFC107', border: '1px solid rgba(255,193,7,0.3)', cursor: 'pointer' }}>
+              <Save size={11} /> {saving === m.id ? 'Zapisywanie...' : 'Zapisz'}
+            </button>
+          </div>
+        ))}
+      </div>
+
+      {/* Add new */}
+      <div className="p-6" style={{ background: '#0A0A0A', border: '1px solid rgba(255,193,7,0.25)', borderRadius: '4px' }}>
+        <h3 className="font-ui font-bold text-sm uppercase tracking-widest mb-4" style={{ color: '#FFC107' }}>Dodaj spotkanie</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 mb-4">
+          <input type="text" placeholder="Inicjały" value={newM.initials} onChange={e => setNewM(m => ({ ...m, initials: e.target.value }))} className="input-amber" maxLength={3} />
+          <input type="text" placeholder="Imię i nazwisko" value={newM.name} onChange={e => setNewM(m => ({ ...m, name: e.target.value }))} className="input-amber" />
+          <input type="text" placeholder="Rola / opis" value={newM.role} onChange={e => setNewM(m => ({ ...m, role: e.target.value }))} className="input-amber" />
+          <input type="text" placeholder="Data / godzina" value={newM.time} onChange={e => setNewM(m => ({ ...m, time: e.target.value }))} className="input-amber" />
+        </div>
+        <button onClick={handleAdd} disabled={!newM.name.trim() || !newM.time.trim()}
+          className="font-ui font-bold text-xs px-6 py-3 uppercase tracking-widest flex items-center gap-2 transition-all duration-200"
+          style={{
+            background: newM.name && newM.time ? '#FFC107' : 'rgba(255,193,7,0.15)',
+            color: newM.name && newM.time ? '#000' : '#555',
+            border: `1px solid ${newM.name && newM.time ? '#FFC107' : 'rgba(255,193,7,0.2)'}`,
+            cursor: newM.name && newM.time ? 'pointer' : 'not-allowed',
+          }}>
+          <Plus size={14} /> Dodaj spotkanie
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ===== TAB: CRM =====
 function TabCRM() {
   const [clients, setClients] = useState([]);
@@ -561,7 +758,7 @@ function TabCRM() {
     const map = {};
     (svcs || []).forEach(s => { map[s.id] = s; });
     setServices(map);
-  }).catch(() => {});
+  });
 
   useEffect(() => { load(); }, []);
 
@@ -687,24 +884,24 @@ function TabCRM() {
                       </div>
                     </div>
                     {client.stripeSessionId && (
-                      <div className="mb-4 p-3" style={{ background: 'rgba(0,200,100,0.04)', border: '1px solid rgba(0,200,100,0.2)', borderRadius: '2px' }}>
-                        <label className="font-ui text-xs uppercase tracking-widest block mb-1" style={{ color: '#00C864' }}>Stripe — płatność zrealizowana</label>
+                      <div className="mb-4 p-3" style={{ background: 'rgba(255,193,7,0.03)', border: '1px solid rgba(255,193,7,0.1)', borderRadius: '2px' }}>
+                        <label className="font-ui text-xs uppercase tracking-widest block mb-1" style={{ color: '#A1A1AA' }}>Stripe Session ID</label>
                         <code className="font-ui text-xs" style={{ color: '#FFC107' }}>{client.stripeSessionId}</code>
                         <p className="font-body text-xs mt-1" style={{ color: '#555' }}>
                           Zweryfikuj w{' '}
-                          <a href="https://dashboard.stripe.com/payments" target="_blank" rel="noreferrer"
+                          <a href={`https://dashboard.stripe.com/payments`} target="_blank" rel="noreferrer"
                             style={{ color: '#FFC107', textDecoration: 'underline' }}>
                             Stripe Dashboard
                           </a>
+                          {' '}— wyszukaj po client_reference_id: <code style={{ color: '#FFC107' }}>{client.id}</code>
                         </p>
                       </div>
                     )}
                     {!client.stripeSessionId && (
-                      <div className="mb-4 p-3" style={{ background: 'rgba(255,80,80,0.04)', border: '1px solid rgba(255,80,80,0.2)', borderRadius: '2px' }}>
-                        <label className="font-ui text-xs uppercase tracking-widest block mb-1" style={{ color: '#ff6666' }}>Płatność niezrealizowana</label>
-                        <p className="font-body text-xs" style={{ color: '#999' }}>
-                          Klient wypełnił formularz, ale <strong style={{ color: '#ff6666' }}>nie ukończył płatności</strong> przez Stripe.
-                          Ten wpis można zignorować lub ręcznie usunąć.
+                      <div className="mb-4 p-3" style={{ background: 'rgba(255,193,7,0.03)', border: '1px solid rgba(255,193,7,0.1)', borderRadius: '2px' }}>
+                        <p className="font-body text-xs" style={{ color: '#555' }}>
+                          Aby zweryfikować płatność w Stripe, wyszukaj po <strong style={{ color: '#FFC107' }}>client_reference_id: {client.id}</strong> w{' '}
+                          <a href="https://dashboard.stripe.com/payments" target="_blank" rel="noreferrer" style={{ color: '#FFC107', textDecoration: 'underline' }}>Stripe Dashboard</a>.
                         </p>
                       </div>
                     )}
@@ -739,8 +936,6 @@ function TabSettings() {
   const navigate = useNavigate();
   const [twoFAEnabled, setTwoFAEnabled] = useState(false);
   const [newPass, setNewPass] = useState('');
-  const [stripeStatus, setStripeStatus] = useState(null);
-  const [stripeLoading, setStripeLoading] = useState(false);
   const [confirmPass, setConfirmPass] = useState('');
   const [totpToDisable, setTotpToDisable] = useState(['','','','','','']);
   const totpDisableRefs = useRef([]);
@@ -873,124 +1068,9 @@ function TabSettings() {
     </div>
   );
 
-  const checkStripe = async () => {
-    setStripeLoading(true);
-    try {
-      const data = await fetch('/api/stripe/health').then(r => r.json());
-      setStripeStatus(data);
-    } catch (e) {
-      setStripeStatus({ ok: false, error: e.message });
-    } finally {
-      setStripeLoading(false);
-    }
-  };
-
-  const webhookUrl = typeof window !== 'undefined'
-    ? `${window.location.origin}/api/stripe/webhook`
-    : '/api/stripe/webhook';
-
   return (
     <div className="flex flex-col gap-8">
       <h2 className="font-heading font-black text-xl" style={{ color: '#FFC107' }}>Ustawienia</h2>
-
-      {/* STRIPE STATUS */}
-      <div className="p-6" style={{ background: '#0A0A0A', border: '1px solid rgba(255,193,7,0.15)', borderRadius: '4px' }}>
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-ui font-bold text-sm uppercase tracking-widest" style={{ color: '#FFC107' }}>Stripe — status połączenia</h3>
-          <button onClick={checkStripe} disabled={stripeLoading}
-            className="font-ui font-bold text-xs px-4 py-2 uppercase tracking-widest transition-all duration-200"
-            style={{ background: 'rgba(255,193,7,0.1)', color: '#FFC107', border: '1px solid rgba(255,193,7,0.3)', cursor: 'pointer', opacity: stripeLoading ? 0.6 : 1 }}>
-            {stripeLoading ? 'Sprawdzam...' : 'Sprawdź połączenie'}
-          </button>
-        </div>
-
-        {stripeStatus && (
-          <div className="mb-4 animate-fade-in">
-            {stripeStatus.ok ? (
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center gap-2">
-                  <span style={{ color: '#00C864', fontSize: '1rem' }}>✓</span>
-                  <span className="font-ui text-sm font-bold" style={{ color: '#00C864' }}>Połączono ze Stripe</span>
-                  <span className="font-ui text-xs px-2 py-0.5" style={{
-                    background: stripeStatus.mode === 'test' ? 'rgba(255,193,7,0.15)' : 'rgba(0,200,100,0.15)',
-                    color: stripeStatus.mode === 'test' ? '#FFC107' : '#00C864',
-                    border: `1px solid ${stripeStatus.mode === 'test' ? 'rgba(255,193,7,0.4)' : 'rgba(0,200,100,0.4)'}`,
-                    borderRadius: '2px',
-                  }}>
-                    {stripeStatus.mode === 'test' ? 'TRYB TESTOWY' : 'TRYB LIVE'}
-                  </span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
-                  <div className="p-2" style={{ background: '#111', borderRadius: '2px', border: '1px solid #222' }}>
-                    <p className="font-ui text-xs" style={{ color: '#555' }}>Płatności aktywne</p>
-                    <p className="font-ui text-sm font-bold" style={{ color: stripeStatus.chargesEnabled ? '#00C864' : '#ff6666' }}>
-                      {stripeStatus.chargesEnabled ? '✓ Tak' : '✕ Nie — dokończ konfigurację konta w Stripe'}
-                    </p>
-                  </div>
-                  <div className="p-2" style={{ background: '#111', borderRadius: '2px', border: '1px solid #222' }}>
-                    <p className="font-ui text-xs" style={{ color: '#555' }}>Dane konta przesłane</p>
-                    <p className="font-ui text-sm font-bold" style={{ color: stripeStatus.detailsSubmitted ? '#00C864' : '#FFC107' }}>
-                      {stripeStatus.detailsSubmitted ? '✓ Tak' : '⚠ Nie — uzupełnij dane w Stripe Dashboard'}
-                    </p>
-                  </div>
-                  {stripeStatus.email && (
-                    <div className="p-2" style={{ background: '#111', borderRadius: '2px', border: '1px solid #222' }}>
-                      <p className="font-ui text-xs" style={{ color: '#555' }}>E-mail konta Stripe</p>
-                      <p className="font-ui text-sm" style={{ color: '#FFF' }}>{stripeStatus.email}</p>
-                    </div>
-                  )}
-                  <div className="p-2" style={{ background: '#111', borderRadius: '2px', border: '1px solid #222' }}>
-                    <p className="font-ui text-xs" style={{ color: '#555' }}>Kraj</p>
-                    <p className="font-ui text-sm font-bold" style={{ color: '#FFF' }}>{stripeStatus.country?.toUpperCase() || '—'}</p>
-                  </div>
-                </div>
-                {!stripeStatus.chargesEnabled && (
-                  <div className="mt-3 p-3" style={{ background: 'rgba(255,80,80,0.06)', border: '1px solid rgba(255,80,80,0.25)', borderRadius: '4px' }}>
-                    <p className="font-body text-xs" style={{ color: '#ff8888', lineHeight: 1.7 }}>
-                      <strong>Konto Stripe wymaga aktywacji.</strong> Przejdź do{' '}
-                      <a href="https://dashboard.stripe.com/settings/account" target="_blank" rel="noreferrer" style={{ color: '#FFC107', textDecoration: 'underline' }}>
-                        Stripe Dashboard → Ustawienia konta
-                      </a>{' '}
-                      i uzupełnij dane weryfikacyjne (tożsamość, konto bankowe). Dopiero po aktywacji będą możliwe prawdziwe płatności.
-                    </p>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="p-3" style={{ background: 'rgba(255,80,80,0.06)', border: '1px solid rgba(255,80,80,0.3)', borderRadius: '4px' }}>
-                <p className="font-ui text-xs font-bold mb-1" style={{ color: '#ff6666' }}>✕ Błąd połączenia ze Stripe</p>
-                <p className="font-body text-xs" style={{ color: '#999' }}>{stripeStatus.error}</p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Webhook URL */}
-        <div className="mt-4 p-4" style={{ background: 'rgba(255,193,7,0.03)', border: '1px solid rgba(255,193,7,0.15)', borderRadius: '4px' }}>
-          <p className="font-ui text-xs uppercase tracking-widest mb-2" style={{ color: '#A1A1AA' }}>URL Webhooka Stripe</p>
-          <p className="font-body text-xs mb-3" style={{ color: '#666', lineHeight: 1.7 }}>
-            Zarejestruj ten adres w{' '}
-            <a href="https://dashboard.stripe.com/webhooks" target="_blank" rel="noreferrer" style={{ color: '#FFC107', textDecoration: 'underline' }}>
-              Stripe Dashboard → Webhooks → Add endpoint
-            </a>
-            . Zdarzenia do nasłuchiwania: <code style={{ color: '#FFC107' }}>checkout.session.completed</code> i <code style={{ color: '#FFC107' }}>checkout.session.expired</code>.
-          </p>
-          <div className="flex items-center gap-2">
-            <code className="font-ui text-xs flex-1 px-3 py-2" style={{ background: '#111', color: '#FFC107', border: '1px solid rgba(255,193,7,0.2)', borderRadius: '2px', wordBreak: 'break-all' }}>
-              {webhookUrl}
-            </code>
-            <button
-              onClick={() => navigator.clipboard?.writeText(webhookUrl)}
-              className="font-ui text-xs px-3 py-2 flex-shrink-0 transition-all duration-200"
-              style={{ background: 'rgba(255,193,7,0.1)', color: '#FFC107', border: '1px solid rgba(255,193,7,0.3)', cursor: 'pointer', borderRadius: '2px' }}>
-              Kopiuj
-            </button>
-          </div>
-          <p className="font-body text-xs mt-2" style={{ color: '#444' }}>
-            ⚠ W środowisku deweloperskim (Replit) webhook działa przez proxy Vite. Po wdrożeniu produkcyjnym URL może być inny.
-          </p>
-        </div>
-      </div>
 
       {/* Change password */}
       <div className="p-6" style={{ background: '#0A0A0A', border: '1px solid rgba(255,193,7,0.15)', borderRadius: '4px' }}>
@@ -1119,6 +1199,255 @@ function TabSettings() {
   );
 }
 
+// ===== TAB: HOME CARDS =====
+function TabHomeCards() {
+  const SECTIONS = [
+    { id: 'problem', label: 'Problem' },
+    { id: 'solution', label: 'Rozwiązanie' },
+    { id: 'forwho', label: 'Dla kogo' },
+    { id: 'rules', label: 'Zasady współpracy' },
+    { id: 'guarantee', label: 'Gwarancja' },
+    { id: 'delivery', label: 'Warianty dostawy' },
+  ];
+  const [section, setSection] = useState('problem');
+  const [cards, setCards] = useState([]);
+  const [saving, setSaving] = useState(null);
+  const [newCard, setNewCard] = useState({ identifier: '', title: '', description: '', badge: '', subtitle: '', isViolet: false });
+
+  const DEFAULT_CARDS = {
+    problem: [
+      { identifier: '// 01', title: 'Brak regularnego napływu leadów', description: 'Miesiąc dobry, dwa słabe. Bez przewidywalności trudno planować rozwój i zatrudnienie.' },
+      { identifier: '// 02', title: 'Zbyt mało rozmów sprzedażowych', description: 'Świetnie realizujesz projekty, ale kalendarz świeci pustkami — a rachunki nie czekają.' },
+      { identifier: '// 03', title: 'Uzależnienie od poleceń', description: 'Kiedy polecenia się kończą, kończą się też klienci. Potrzebujesz drugiego, kontrolowanego kanału.' },
+      { identifier: '// 04', title: 'Rozmowy, które nie mają sensu', description: 'Ktoś wchodzi na calla i nie wie, o co chodzi. Albo pyta tylko o cenę i rozłącza się, gdy słyszy, że to kosztuje parę tysięcy.' },
+      { identifier: '// 05', title: 'Brak czasu na prospecting', description: 'Wysyłanie wiadomości, follow-upy, kwalifikacja — to pełny etat, którego nie masz.' },
+    ],
+    solution: [
+      { identifier: 'IN 01', title: 'Spersonalizowane wiadomości', description: 'Piszemy sekwencje, które brzmią jak wiadomość od człowieka, a nie masowy szablon.' },
+      { identifier: 'IN 02', title: 'Outreach na LinkedIn i e-mail', description: 'Prowadzimy kampanie wielokanałowe, testujemy, optymalizujemy — codziennie.' },
+      { identifier: '✓ 03', title: 'Kwalifikacja leadów', description: 'Rozmawiamy z odpowiadającymi, weryfikujemy dopasowanie i intencję zakupową.' },
+      { identifier: '🗂 04', title: 'Umawianie spotkań w Twoim kalendarzu', description: 'Dostajesz numer wstępnie zainteresowanego klienta z briefem — albo lead sam wybiera termin w Twoim Calendly. Ty tylko wchodzisz na rozmowę i sprzedajesz.' },
+    ],
+    forwho: [
+      { title: 'Agencje marketingowe', description: 'Social media, SEO, Google Ads, performance — budujemy Ci pipeline z firm gotowych do inwestycji.' },
+      { title: 'Freelancerzy specjaliści', description: 'Copywriterzy, UX/UI, developerzy — dopasowujemy leady do Twojej specjalizacji.' },
+      { title: 'Studia produkcyjne', description: 'Zlecenia na kampanie, spoty, sesje — rozmawiasz z decydentami, nie z asystentami.' },
+      { title: 'Twórcy i montażyści rolek', description: 'Montujesz rolki, shorty, wideo? Docieramy do marek i twórców, którzy potrzebują stałej obsługi montażu.' },
+      { title: 'Graficy i branding', description: 'Projekty identyfikacji i brandingu — klienci z realnym budżetem, nie darmówki.' },
+      { title: 'Konsultanci B2B', description: 'Sprzedaż eksperckich usług do firm — docieramy do osób decyzyjnych.' },
+    ],
+    rules: [
+      { badge: '0 zł', subtitle: 'ZA ROZMOWY, KTÓRE SIĘ NIE ODBYŁY', description: '' },
+      { badge: '100%', subtitle: 'ROZMÓW KWALIFIKOWANYCH PRZED PRZEKAZANIEM', description: '' },
+      { badge: '14 dni', subtitle: 'DO PIERWSZYCH UMÓWIONYCH ROZMÓW', description: '' },
+      { badge: '1 mies.', subtitle: 'WYPOWIEDZENIA — BEZ WIELOLETNICH UMÓW', description: '' },
+    ],
+    guarantee: [
+      { badge: 'Odbyta', subtitle: 'ROZMOWA = JEDYNA PODSTAWA ROZLICZENIA', description: '', isViolet: true },
+      { badge: 'Zastępczy', subtitle: 'TERMIN ZA 0 ZŁ, GDY KLIENT SIĘ NIE POJAWI', description: '', isViolet: true },
+      { badge: 'Test', subtitle: 'PIERWSZY OKRES TRAKTUJEMY JAKO SPRAWDZENIE DOPASOWANIA', description: '', isViolet: true },
+      { badge: 'Wyjście', subtitle: 'W KAŻDEJ CHWILI Z MIESIĘCZNYM WYPOWIEDZENIEM', description: '', isViolet: true },
+    ],
+    delivery: [
+      { title: 'DOSTAWA - WARIANT A: Numer wstępnie zainteresowanego klienta', description: 'Wysyłamy Ci numer osoby, która zna Twoją ofertę i czeka na kontakt — dzwonisz w umówionym terminie.' },
+      { title: 'DOSTAWA - WARIANT B: Rezerwacja przez Twój Calendly', description: 'Lead dostaje link do Twojego kalendarza i sam wybiera termin oraz godzinę — spotkanie ląduje u Ciebie automatycznie.' },
+    ],
+  };
+
+  const load = async (sec) => {
+    let d = await base44.entities.HomeCard.filter({ section: sec });
+    if ((!d || d.length === 0) && DEFAULT_CARDS[sec]) {
+      for (let i = 0; i < DEFAULT_CARDS[sec].length; i++) {
+        await base44.entities.HomeCard.create({ ...DEFAULT_CARDS[sec][i], section: sec, order: i + 1 });
+      }
+      d = await base44.entities.HomeCard.filter({ section: sec });
+    }
+    setCards((d || []).sort((a, b) => (a.order || 0) - (b.order || 0)));
+  };
+  useEffect(() => { load(section); }, [section]);
+
+  const handleChange = (id, field, val) => setCards(prev => prev.map(c => c.id === id ? { ...c, [field]: val } : c));
+  const handleSave = async (c) => {
+    setSaving(c.id);
+    await base44.entities.HomeCard.update(c.id, { identifier: c.identifier, title: c.title, description: c.description, badge: c.badge, subtitle: c.subtitle, isViolet: c.isViolet });
+    setSaving(null); load(section);
+  };
+  const handleDelete = async (id) => { if (!confirm('Usunąć tę kartę?')) return; await base44.entities.HomeCard.delete(id); load(section); };
+  const handleAdd = async () => {
+    if (!newCard.title.trim()) return;
+    await base44.entities.HomeCard.create({ ...newCard, section, order: cards.length + 1 });
+    setNewCard({ identifier: '', title: '', description: '', badge: '', subtitle: '', isViolet: false });
+    load(section);
+  };
+
+  const showIdentifier = ['problem', 'solution', 'delivery'].includes(section);
+  const showNumbers = ['rules', 'guarantee'].includes(section);
+
+  return (
+    <div className="flex flex-col gap-6">
+      <h2 className="font-heading font-black text-xl" style={{ color: '#FFC107' }}>Karty sekcji</h2>
+      <div className="flex flex-wrap gap-2">
+        {SECTIONS.map(s => (
+          <button key={s.id} onClick={() => setSection(s.id)} className="font-ui text-xs px-4 py-2 uppercase tracking-widest transition-all duration-200"
+            style={{ background: section === s.id ? '#FFC107' : 'transparent', color: section === s.id ? '#000' : '#FFC107', border: '1px solid rgba(255,193,7,0.4)', cursor: 'pointer' }}>{s.label}</button>
+        ))}
+      </div>
+      <div className="flex flex-col gap-3">
+        {cards.map(c => (
+          <div key={c.id} className="p-4" style={{ background: '#0A0A0A', border: '1px solid rgba(255,193,7,0.15)', borderRadius: '4px' }}>
+            <div className="flex items-center mb-3">
+              <span className="font-ui text-xs" style={{ color: '#555' }}>#{c.order || ''}</span>
+              <button onClick={() => handleDelete(c.id)} style={{ color: '#666', background: 'none', border: 'none', cursor: 'pointer', marginLeft: 'auto' }}
+                onMouseEnter={e => e.currentTarget.style.color = '#ff4444'} onMouseLeave={e => e.currentTarget.style.color = '#666'}><Trash2 size={16} /></button>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+              {showIdentifier && <div><label className="font-ui text-xs uppercase tracking-widest block mb-1" style={{ color: '#A1A1AA' }}>Identyfikator</label><input type="text" value={c.identifier || ''} onChange={e => handleChange(c.id, 'identifier', e.target.value)} className="input-amber" /></div>}
+              <div><label className="font-ui text-xs uppercase tracking-widest block mb-1" style={{ color: '#A1A1AA' }}>Tytuł</label><input type="text" value={c.title || ''} onChange={e => handleChange(c.id, 'title', e.target.value)} className="input-amber" /></div>
+              {showNumbers && <div><label className="font-ui text-xs uppercase tracking-widest block mb-1" style={{ color: '#A1A1AA' }}>Wartość (badge)</label><input type="text" value={c.badge || ''} onChange={e => handleChange(c.id, 'badge', e.target.value)} className="input-amber" /></div>}
+              {showNumbers && <div><label className="font-ui text-xs uppercase tracking-widest block mb-1" style={{ color: '#A1A1AA' }}>Podtytuł</label><input type="text" value={c.subtitle || ''} onChange={e => handleChange(c.id, 'subtitle', e.target.value)} className="input-amber" /></div>}
+            </div>
+            <div className="mb-3"><label className="font-ui text-xs uppercase tracking-widest block mb-1" style={{ color: '#A1A1AA' }}>Opis</label><textarea value={c.description || ''} onChange={e => handleChange(c.id, 'description', e.target.value)} className="input-amber" rows={2} /></div>
+            {section === 'guarantee' && <label className="flex items-center gap-2 font-ui text-xs mb-3" style={{ color: '#A1A1AA' }}><input type="checkbox" checked={!!c.isViolet} onChange={e => handleChange(c.id, 'isViolet', e.target.checked)} /> Wariant fioletowy</label>}
+            <button onClick={() => handleSave(c)} className="font-ui text-xs px-3 py-2 flex items-center gap-1" style={{ background: 'rgba(255,193,7,0.1)', color: '#FFC107', border: '1px solid rgba(255,193,7,0.3)', cursor: 'pointer' }}><Save size={11} /> {saving === c.id ? 'Zapisywanie...' : 'Zapisz'}</button>
+          </div>
+        ))}
+      </div>
+      <div className="p-6" style={{ background: '#0A0A0A', border: '1px solid rgba(255,193,7,0.25)', borderRadius: '4px' }}>
+        <h3 className="font-ui font-bold text-sm uppercase tracking-widest mb-4" style={{ color: '#FFC107' }}>Dodaj kartę</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+          {showIdentifier && <input type="text" placeholder="Identyfikator" value={newCard.identifier} onChange={e => setNewCard(n => ({ ...n, identifier: e.target.value }))} className="input-amber" />}
+          <input type="text" placeholder="Tytuł" value={newCard.title} onChange={e => setNewCard(n => ({ ...n, title: e.target.value }))} className="input-amber" />
+          {showNumbers && <input type="text" placeholder="Wartość (badge)" value={newCard.badge} onChange={e => setNewCard(n => ({ ...n, badge: e.target.value }))} className="input-amber" />}
+          {showNumbers && <input type="text" placeholder="Podtytuł" value={newCard.subtitle} onChange={e => setNewCard(n => ({ ...n, subtitle: e.target.value }))} className="input-amber" />}
+        </div>
+        <textarea placeholder="Opis" value={newCard.description} onChange={e => setNewCard(n => ({ ...n, description: e.target.value }))} className="input-amber mb-3" rows={2} />
+        {section === 'guarantee' && <label className="flex items-center gap-2 font-ui text-xs mb-3" style={{ color: '#A1A1AA' }}><input type="checkbox" checked={newCard.isViolet} onChange={e => setNewCard(n => ({ ...n, isViolet: e.target.checked }))} /> Wariant fioletowy</label>}
+        <button onClick={handleAdd} disabled={!newCard.title.trim()} className="font-ui font-bold text-xs px-6 py-3 uppercase tracking-widest flex items-center gap-2"
+          style={{ background: newCard.title.trim() ? '#FFC107' : 'rgba(255,193,7,0.15)', color: newCard.title.trim() ? '#000' : '#555', border: `1px solid ${newCard.title.trim() ? '#FFC107' : 'rgba(255,193,7,0.2)'}`, cursor: newCard.title.trim() ? 'pointer' : 'not-allowed' }}><Plus size={14} /> Dodaj kartę</button>
+      </div>
+    </div>
+  );
+}
+
+// ===== TAB: PROCESS =====
+function TabProcess() {
+  const [steps, setSteps] = useState([]);
+  const [saving, setSaving] = useState(null);
+  const [newStep, setNewStep] = useState({ number: '', title: '', description: '' });
+  const DEFAULT_STEPS = [
+    { number: 'KROK 01', title: 'Outreach', description: 'Docieramy do Twojej grupy docelowej przez cold e-mail, LinkedIn i telefon.' },
+    { number: 'KROK 02', title: 'Rozmowa kwalifikacyjna — 10-20 minut', description: 'Rozmawiamy z leadem na poważnie: o problemach, celach, obecnej sytuacji w firmie i tej wymarzonej, do której chce dojść. Pytamy, ilu nowych klientów jest w stanie realnie przyjąć w miesiącu.' },
+    { number: 'KROK 03', title: 'Badanie potrzeb i budżetu', description: 'Naciskamy na ból, który lead ma teraz — bez realnego problemu i budżetu nie ma spotkania.' },
+    { number: 'KROK 04', title: 'Prezentacja Twojej oferty', description: 'Przedstawiamy wartość Twojej usługi tak, że umówienie rozmowy z Tobą staje się dla leada oczywistym następnym krokiem.' },
+    { number: 'KROK 05', title: 'Umówienie na konkretną godzinę', description: 'Lead wybiera termin, który mu pasuje — dostajesz spotkanie na godzinę, którą sam wskazałeś w swojej dostępności.' },
+    { number: 'KROK 06', title: 'Przypomnienie przed rozmową', description: 'Przed spotkaniem przypominamy leadowi o rozmowie — dzięki temu frekwencja jest wysoka, a Ty nie czekasz przy pustym Zoomie.' },
+    { number: 'KROK 07', title: 'Ciepły lead w Twoim kalendarzu', description: 'Dostajesz kontakt z briefem: kim jest, jaki ma budżet, czego chce. Nikt nie będzie zaskoczony Twoim telefonem — lead czeka na tę rozmowę.' },
+  ];
+  const load = async () => {
+    let d = await base44.entities.ProcessStep.list('order', 30);
+    if (!d || d.length === 0) {
+      for (let i = 0; i < DEFAULT_STEPS.length; i++) await base44.entities.ProcessStep.create({ ...DEFAULT_STEPS[i], order: i + 1 });
+      d = await base44.entities.ProcessStep.list('order', 30);
+    }
+    setSteps((d || []).sort((a, b) => (a.order || 0) - (b.order || 0)));
+  };
+  useEffect(() => { load(); }, []);
+  const handleChange = (id, field, val) => setSteps(prev => prev.map(s => s.id === id ? { ...s, [field]: val } : s));
+  const handleSave = async (s) => { setSaving(s.id); await base44.entities.ProcessStep.update(s.id, { number: s.number, title: s.title, description: s.description }); setSaving(null); load(); };
+  const handleDelete = async (id) => { if (!confirm('Usunąć krok?')) return; await base44.entities.ProcessStep.delete(id); load(); };
+  const handleAdd = async () => { if (!newStep.title.trim()) return; await base44.entities.ProcessStep.create({ ...newStep, order: steps.length + 1 }); setNewStep({ number: '', title: '', description: '' }); load(); };
+  return (
+    <div className="flex flex-col gap-6">
+      <h2 className="font-heading font-black text-xl" style={{ color: '#FFC107' }}>Proces 7 kroków</h2>
+      <p className="font-body text-xs" style={{ color: '#555' }}>Warianty dostawy edytuj w zakładce „Karty sekcji" → „Warianty dostawy".</p>
+      <div className="flex flex-col gap-3">
+        {steps.map(s => (
+          <div key={s.id} className="p-4" style={{ background: '#0A0A0A', border: '1px solid rgba(255,193,7,0.15)', borderRadius: '4px' }}>
+            <div className="flex items-center mb-3">
+              <span className="font-ui text-xs" style={{ color: '#555' }}>#{s.order || ''}</span>
+              <button onClick={() => handleDelete(s.id)} style={{ color: '#666', background: 'none', border: 'none', cursor: 'pointer', marginLeft: 'auto' }}
+                onMouseEnter={e => e.currentTarget.style.color = '#ff4444'} onMouseLeave={e => e.currentTarget.style.color = '#666'}><Trash2 size={16} /></button>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+              <div><label className="font-ui text-xs uppercase tracking-widest block mb-1" style={{ color: '#A1A1AA' }}>Numer</label><input type="text" value={s.number || ''} onChange={e => handleChange(s.id, 'number', e.target.value)} className="input-amber" /></div>
+              <div className="sm:col-span-2"><label className="font-ui text-xs uppercase tracking-widest block mb-1" style={{ color: '#A1A1AA' }}>Tytuł</label><input type="text" value={s.title || ''} onChange={e => handleChange(s.id, 'title', e.target.value)} className="input-amber" /></div>
+            </div>
+            <textarea value={s.description || ''} onChange={e => handleChange(s.id, 'description', e.target.value)} className="input-amber mb-3" rows={3} placeholder="Opis kroku" />
+            <button onClick={() => handleSave(s)} className="font-ui text-xs px-3 py-2 flex items-center gap-1" style={{ background: 'rgba(255,193,7,0.1)', color: '#FFC107', border: '1px solid rgba(255,193,7,0.3)', cursor: 'pointer' }}><Save size={11} /> {saving === s.id ? 'Zapisywanie...' : 'Zapisz'}</button>
+          </div>
+        ))}
+      </div>
+      <div className="p-6" style={{ background: '#0A0A0A', border: '1px solid rgba(255,193,7,0.25)', borderRadius: '4px' }}>
+        <h3 className="font-ui font-bold text-sm uppercase tracking-widest mb-4" style={{ color: '#FFC107' }}>Dodaj krok</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+          <input type="text" placeholder="Numer (KROK 01)" value={newStep.number} onChange={e => setNewStep(n => ({ ...n, number: e.target.value }))} className="input-amber" />
+          <input type="text" placeholder="Tytuł" value={newStep.title} onChange={e => setNewStep(n => ({ ...n, title: e.target.value }))} className="input-amber sm:col-span-2" />
+        </div>
+        <textarea placeholder="Opis" value={newStep.description} onChange={e => setNewStep(n => ({ ...n, description: e.target.value }))} className="input-amber mb-3" rows={3} />
+        <button onClick={handleAdd} disabled={!newStep.title.trim()} className="font-ui font-bold text-xs px-6 py-3 uppercase tracking-widest flex items-center gap-2"
+          style={{ background: newStep.title.trim() ? '#FFC107' : 'rgba(255,193,7,0.15)', color: newStep.title.trim() ? '#000' : '#555', border: `1px solid ${newStep.title.trim() ? '#FFC107' : 'rgba(255,193,7,0.2)'}`, cursor: newStep.title.trim() ? 'pointer' : 'not-allowed' }}><Plus size={14} /> Dodaj krok</button>
+      </div>
+    </div>
+  );
+}
+
+// ===== TAB: FAQ =====
+function TabFaq() {
+  const [items, setItems] = useState([]);
+  const [saving, setSaving] = useState(null);
+  const [newItem, setNewItem] = useState({ question: '', answer: '' });
+  const DEFAULTS = [
+    { question: 'Skąd wiadomo, że klient jest naprawdę zainteresowany?', answer: 'Zanim ktokolwiek trafi do Twojego kalendarza, rozmawiamy z nim 10–20 minut. Badamy jego obecną sytuację, cele, problemy i budżet, pytamy, ilu nowych klientów jest w stanie przyjąć w miesiącu — i przedstawiamy Twoją ofertę. Do Ciebie trafiają tylko osoby, które po tej rozmowie same chciały się umówić.' },
+    { question: 'Czy lead będzie wiedział, o co chodzi na rozmowie?', answer: 'Tak — i to jest cała różnica. Nie masz sytuacji, że ktoś wchodzi na rozmowę i nie wie, po co, albo pyta tylko o cenę i rozłącza się, gdy słyszy, że usługa kosztuje kilka tysięcy. Lead zna Twoją ofertę, zna orientacyjną wartość usługi i czeka na tę rozmowę. Nikt nie jest zaskoczony Twoim telefonem.' },
+    { question: 'Jak dokładnie otrzymuję spotkanie?', answer: 'Na dwa sposoby, jak wolisz: (1) wysyłamy Ci numer telefonu wstępnie zainteresowanego klienta wraz z briefem, albo (2) lead dostaje link do Twojego Calendly i sam wybiera termin oraz godzinę rozmowy. W obu przypadkach spotkanie jest na konkretną godzinę, którą klient wybrał.' },
+    { question: 'Czy muszę mieć Calendly?', answer: 'Nie. Jeśli go nie masz, wystarczy że wyślesz nam swój kalendarz dostępności — dni i godziny, w których możesz prowadzić rozmowy. Wtedy wiemy dokładnie, na jakie terminy umawiać Ci spotkania.' },
+    { question: 'Czy używacie reklam?', answer: '' },
+    { question: 'Co jeśli rozmowa się nie odbędzie?', answer: 'Przed każdym spotkaniem przypominamy leadowi o rozmowie, więc frekwencja jest wysoka. Jeśli mimo to klient się nie pojawi — umawiamy zastępczy termin bez dodatkowych kosztów. Rozliczamy się wyłącznie za realnie odbyte rozmowy.' },
+    { question: 'Dla kogo to jest?', answer: 'Dla agencji marketingowych (m.in. Facebook Ads, Google Ads, SEO, social media), freelancerów, montażystów rolek i wideo, grafików oraz studiów produkcyjnych. Szczegóły per branża znajdziesz na stronie Dla kogo.' },
+    { question: 'Czy muszę podpisywać długą umowę?', answer: 'Nie. Po pierwszym okresie, który traktujemy jako test dopasowania, przechodzimy na elastyczne warunki z miesięcznym okresem wypowiedzenia. Bez kar i wieloletnich zobowiązań.' },
+    { question: 'Ile spotkań mogę otrzymywać miesięcznie?', answer: 'Docelowo 8–20 kwalifikowanych spotkań miesięcznie, w zależności od Twojej niszy, oferty i tego, ilu nowych klientów Twój zespół jest w stanie realnie obsłużyć. Wolumen ustalamy wspólnie i zwiększamy, gdy jesteś gotowy na więcej.' },
+  ];
+  const load = async () => {
+    let d = await base44.entities.FaqItem.list('order', 50);
+    if (!d || d.length === 0) {
+      for (let i = 0; i < DEFAULTS.length; i++) await base44.entities.FaqItem.create({ ...DEFAULTS[i], order: i + 1 });
+      d = await base44.entities.FaqItem.list('order', 50);
+    }
+    setItems((d || []).sort((a, b) => (a.order || 0) - (b.order || 0)));
+  };
+  useEffect(() => { load(); }, []);
+  const handleChange = (id, field, val) => setItems(prev => prev.map(it => it.id === id ? { ...it, [field]: val } : it));
+  const handleSave = async (it) => { setSaving(it.id); await base44.entities.FaqItem.update(it.id, { question: it.question, answer: it.answer }); setSaving(null); load(); };
+  const handleDelete = async (id) => { if (!confirm('Usunąć pytanie?')) return; await base44.entities.FaqItem.delete(id); load(); };
+  const handleAdd = async () => { if (!newItem.question.trim()) return; await base44.entities.FaqItem.create({ ...newItem, order: items.length + 1 }); setNewItem({ question: '', answer: '' }); load(); };
+  return (
+    <div className="flex flex-col gap-6">
+      <h2 className="font-heading font-black text-xl" style={{ color: '#FFC107' }}>FAQ (Akordeon)</h2>
+      <div className="flex flex-col gap-3">
+        {items.map(it => (
+          <div key={it.id} className="p-4" style={{ background: '#0A0A0A', border: '1px solid rgba(255,193,7,0.15)', borderRadius: '4px' }}>
+            <div className="flex items-center mb-3">
+              <span className="font-ui text-xs" style={{ color: '#555' }}>#{it.order || ''}</span>
+              <button onClick={() => handleDelete(it.id)} style={{ color: '#666', background: 'none', border: 'none', cursor: 'pointer', marginLeft: 'auto' }}
+                onMouseEnter={e => e.currentTarget.style.color = '#ff4444'} onMouseLeave={e => e.currentTarget.style.color = '#666'}><Trash2 size={16} /></button>
+            </div>
+            <input type="text" value={it.question || ''} onChange={e => handleChange(it.id, 'question', e.target.value)} className="input-amber mb-3" placeholder="Pytanie" />
+            <textarea value={it.answer || ''} onChange={e => handleChange(it.id, 'answer', e.target.value)} className="input-amber mb-3" rows={4} placeholder="Odpowiedź (puste = ikona plusa)" />
+            <button onClick={() => handleSave(it)} className="font-ui text-xs px-3 py-2 flex items-center gap-1" style={{ background: 'rgba(255,193,7,0.1)', color: '#FFC107', border: '1px solid rgba(255,193,7,0.3)', cursor: 'pointer' }}><Save size={11} /> {saving === it.id ? 'Zapisywanie...' : 'Zapisz'}</button>
+          </div>
+        ))}
+      </div>
+      <div className="p-6" style={{ background: '#0A0A0A', border: '1px solid rgba(255,193,7,0.25)', borderRadius: '4px' }}>
+        <h3 className="font-ui font-bold text-sm uppercase tracking-widest mb-4" style={{ color: '#FFC107' }}>Dodaj pytanie</h3>
+        <input type="text" placeholder="Pytanie" value={newItem.question} onChange={e => setNewItem(n => ({ ...n, question: e.target.value }))} className="input-amber mb-3" />
+        <textarea placeholder="Odpowiedź" value={newItem.answer} onChange={e => setNewItem(n => ({ ...n, answer: e.target.value }))} className="input-amber mb-3" rows={4} />
+        <button onClick={handleAdd} disabled={!newItem.question.trim()} className="font-ui font-bold text-xs px-6 py-3 uppercase tracking-widest flex items-center gap-2"
+          style={{ background: newItem.question.trim() ? '#FFC107' : 'rgba(255,193,7,0.15)', color: newItem.question.trim() ? '#000' : '#555', border: `1px solid ${newItem.question.trim() ? '#FFC107' : 'rgba(255,193,7,0.2)'}`, cursor: newItem.question.trim() ? 'pointer' : 'not-allowed' }}><Plus size={14} /> Dodaj pytanie</button>
+      </div>
+    </div>
+  );
+}
+
 // ===== MAIN DASHBOARD =====
 const TABS = [
   { id: 'text', label: 'Teksty strony', icon: Type },
@@ -1126,6 +1455,10 @@ const TABS = [
   { id: 'services', label: 'Usługi', icon: Briefcase },
   { id: 'questions', label: 'Pytania', icon: HelpCircle },
   { id: 'slots', label: 'Kalendarz', icon: Settings },
+  { id: 'meetings', label: 'Spotkania', icon: Calendar },
+  { id: 'homecards', label: 'Karty sekcji', icon: Layers },
+  { id: 'process', label: 'Proces', icon: ListOrdered },
+  { id: 'faqtab', label: 'FAQ', icon: HelpCircle },
   { id: 'crm', label: 'Klienci (CRM)', icon: Users },
   { id: 'settings', label: 'Ustawienia', icon: Settings },
 ];
@@ -1148,6 +1481,10 @@ export default function AdminDashboard() {
       case 'services': return <TabServices />;
       case 'questions': return <TabQuestions />;
       case 'slots': return <TabSlots />;
+      case 'meetings': return <TabMeetings />;
+      case 'homecards': return <TabHomeCards />;
+      case 'process': return <TabProcess />;
+      case 'faqtab': return <TabFaq />;
       case 'crm': return <TabCRM />;
       case 'settings': return <TabSettings />;
       default: return null;

@@ -72,6 +72,46 @@ export async function initDb() {
       value TEXT,
       created_at TIMESTAMP DEFAULT NOW()
     );
+
+    CREATE TABLE IF NOT EXISTS home_cards (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      section VARCHAR(50) NOT NULL,
+      identifier VARCHAR(100) DEFAULT '',
+      title TEXT DEFAULT '',
+      description TEXT DEFAULT '',
+      badge VARCHAR(255) DEFAULT '',
+      subtitle VARCHAR(255) DEFAULT '',
+      is_violet BOOLEAN DEFAULT FALSE,
+      order_num INTEGER DEFAULT 0,
+      created_at TIMESTAMP DEFAULT NOW()
+    );
+
+    CREATE TABLE IF NOT EXISTS faq_items (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      question TEXT NOT NULL,
+      answer TEXT NOT NULL,
+      order_num INTEGER DEFAULT 0,
+      created_at TIMESTAMP DEFAULT NOW()
+    );
+
+    CREATE TABLE IF NOT EXISTS meetings (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      initials VARCHAR(20) DEFAULT '',
+      name VARCHAR(255) NOT NULL,
+      role VARCHAR(255) DEFAULT '',
+      time VARCHAR(100) DEFAULT '',
+      order_num INTEGER DEFAULT 0,
+      created_at TIMESTAMP DEFAULT NOW()
+    );
+
+    CREATE TABLE IF NOT EXISTS process_steps (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      number VARCHAR(50) DEFAULT '',
+      title VARCHAR(255) NOT NULL,
+      description TEXT DEFAULT '',
+      order_num INTEGER DEFAULT 0,
+      created_at TIMESTAMP DEFAULT NOW()
+    );
   `);
   console.log('✓ Database schema ready');
 }

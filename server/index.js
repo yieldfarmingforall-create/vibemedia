@@ -374,6 +374,114 @@ app.put('/api/admin-settings/:id', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// ── HOME CONTENT ─────────────────────────────────────────────────────────────
+const homeCardSel = `SELECT id, section, identifier, title, description, badge, subtitle,
+  is_violet AS "isViolet", order_num AS "order", created_at AS "created_date" FROM home_cards`;
+const faqSel = `SELECT id, question, answer, order_num AS "order", created_at AS "created_date" FROM faq_items`;
+const meetingSel = `SELECT id, initials, name, role, time, order_num AS "order", created_at AS "created_date" FROM meetings`;
+const processSel = `SELECT id, number, title, description, order_num AS "order", created_at AS "created_date" FROM process_steps`;
+
+function contentRoutes({ path: route, select, table, fields, filterField }) {
+  app.get(`/api/${route}`, async (req, res) => {
+    try {
+      const params = [];
+      const conditions = [];
+      if (filterField && req.query[filterField] !== undefined) {
+        params.push(req.query[filterField]);
+        conditions.push(`${filterField === 'section' ? 'section' : filterField}=$${params.length}`);
+      }
+      const where = conditions.length ? ` WHERE ${conditions.join(' AND ')}` : '';
+      const limit = req.query._limit ? ` LIMIT ${Math.min(parseInt(req.query._limit) || 100, 500)}` : '';
+      const result = await pool.query(`${select}${where} ORDER BY ${orderBy(req.query._sort, 'order_num ASC')}${limit}`, params);
+      res.json(result.rows);
+    } catch (error) { res.status(500).json({ error: error.message }); }
+  });
+
+  app.post(`/api/${route}`, async (req, res) => {
+    try {
+      const values = fields.map(({ key, column, fallback }) => req.body[key] ?? fallback);
+      const columns = fields.map(({ column }) => column).join(',');
+      const placeholders = values.map((_, index) => `$${index + 1}`).join(',');
+      const result = await pool.query(
+        `INSERT INTO ${table} (${columns}) VALUES (${placeholders}) RETURNING id`,
+        values,
+      );
+      const row = await pool.query(`${select} WHERE id=$1`, [result.rows[0].id]);
+      res.json(row.rows[0]);
+    } catch (error) { res.status(500).json({ error: error.message }); }
+  });
+
+  app.put(`/api/${route}/:id`, async (req, res) => {
+    try {
+      const editable = fields.filter(({ key }) => req.body[key] !== undefined);
+      const values = editable.map(({ key }) => req.body[key]);
+      if (!editable.length) return res.status(400).json({ error: 'No fields to update' });
+      const sets = editable.map(({ column }, index) => `${column}=$${index + 1}`).join(',');
+      values.push(req.params.id);
+      await pool.query(`UPDATE ${table} SET ${sets} WHERE id=$${values.length}`, values);
+      const row = await pool.query(`${select} WHERE id=$1`, [req.params.id]);
+      res.json(row.rows[0]);
+    } catch (error) { res.status(500).json({ error: error.message }); }
+  });
+
+  app.delete(`/api/${route}/:id`, async (req, res) => {
+    try {
+      await pool.query(`DELETE FROM ${table} WHERE id=$1`, [req.params.id]);
+      res.json({ ok: true });
+    } catch (error) { res.status(500).json({ error: error.message }); }
+  });
+}
+
+contentRoutes({
+  path: 'home-cards',
+  select: homeCardSel,
+  table: 'home_cards',
+  filterField: 'section',
+  fields: [
+    { key: 'section', column: 'section', fallback: '' },
+    { key: 'identifier', column: 'identifier', fallback: '' },
+    { key: 'title', column: 'title', fallback: '' },
+    { key: 'description', column: 'description', fallback: '' },
+    { key: 'badge', column: 'badge', fallback: '' },
+    { key: 'subtitle', column: 'subtitle', fallback: '' },
+    { key: 'isViolet', column: 'is_violet', fallback: false },
+    { key: 'order', column: 'order_num', fallback: 0 },
+  ],
+});
+contentRoutes({
+  path: 'faq-items',
+  select: faqSel,
+  table: 'faq_items',
+  fields: [
+    { key: 'question', column: 'question', fallback: '' },
+    { key: 'answer', column: 'answer', fallback: '' },
+    { key: 'order', column: 'order_num', fallback: 0 },
+  ],
+});
+contentRoutes({
+  path: 'meetings',
+  select: meetingSel,
+  table: 'meetings',
+  fields: [
+    { key: 'initials', column: 'initials', fallback: '' },
+    { key: 'name', column: 'name', fallback: '' },
+    { key: 'role', column: 'role', fallback: '' },
+    { key: 'time', column: 'time', fallback: '' },
+    { key: 'order', column: 'order_num', fallback: 0 },
+  ],
+});
+contentRoutes({
+  path: 'process-steps',
+  select: processSel,
+  table: 'process_steps',
+  fields: [
+    { key: 'number', column: 'number', fallback: '' },
+    { key: 'title', column: 'title', fallback: '' },
+    { key: 'description', column: 'description', fallback: '' },
+    { key: 'order', column: 'order_num', fallback: 0 },
+  ],
+});
+
 // ── FILE UPLOAD ───────────────────────────────────────────────────────────────
 app.post('/api/upload', upload.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file provided' });

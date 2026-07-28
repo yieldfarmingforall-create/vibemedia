@@ -65,6 +65,10 @@ export const base44 = {
     AvailableSlot: makeEntity('/slots'),
     Client: makeEntity('/clients'),
     AdminSettings: makeEntity('/admin-settings'),
+    HomeCard: makeEntity('/home-cards'),
+    FaqItem: makeEntity('/faq-items'),
+    Meeting: makeEntity('/meetings'),
+    ProcessStep: makeEntity('/process-steps'),
   },
   functions: {
     createStripeSession: (data) =>

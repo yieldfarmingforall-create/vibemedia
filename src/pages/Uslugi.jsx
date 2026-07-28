@@ -59,8 +59,9 @@ export default function Uslugi() {
         <h1
           className="font-heading text-center mb-16"
           style={{ fontSize: 'clamp(2rem, 6vw, 4rem)', fontWeight: 900, color: '#FFC107', letterSpacing: '0.1em', textShadow: '0 0 40px rgba(255,193,7,0.3)' }}
-          dangerouslySetInnerHTML={{ __html: pageTitle }}
-        />
+        >
+          {pageTitle}
+        </h1>
 
         {/* 4-column monolith grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
