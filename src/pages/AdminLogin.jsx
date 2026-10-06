@@ -1,8 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Eye, EyeOff } from 'lucide-react';
 import { verifyTotp } from '@/lib/totp';
+import TotpCodeInput from '@/components/TotpCodeInput';
 
 const DEFAULT_PASSWORD = 'NorbertAdmin2024!';
 const SESSION_KEY = 'adminSession';
@@ -17,6 +18,9 @@ export default function AdminLogin() {
   const [loading, setLoading] = useState(false);
   const [twoFAEnabled, setTwoFAEnabled] = useState(false);
   const totpRefs = useRef([]);
+  const totpInputRef = useCallback(element => {
+    totpRefs.current[0] = element;
+  }, []);
 
   useEffect(() => {
     // Check if already logged in
@@ -60,31 +64,6 @@ export default function AdminLogin() {
     }
 
     setLoading(false);
-  };
-
-  const handleTotpChange = (idx, val) => {
-    const v = val.replace(/\D/g, '').slice(-1);
-    const next = [...totpCode];
-    next[idx] = v;
-    setTotpCode(next);
-    if (v && idx < 5) totpRefs.current[idx + 1]?.focus();
-  };
-
-  const handleTotpKeyDown = (idx, e) => {
-    if (e.key === 'Backspace' && !totpCode[idx] && idx > 0) {
-      totpRefs.current[idx - 1]?.focus();
-    }
-    if (e.key === 'ArrowLeft' && idx > 0) totpRefs.current[idx - 1]?.focus();
-    if (e.key === 'ArrowRight' && idx < 5) totpRefs.current[idx + 1]?.focus();
-  };
-
-  const handleTotpPaste = (e) => {
-    e.preventDefault();
-    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
-    const next = [...totpCode];
-    for (let i = 0; i < 6; i++) next[i] = pasted[i] || '';
-    setTotpCode(next);
-    totpRefs.current[Math.min(pasted.length, 5)]?.focus();
   };
 
   const handleTotpVerify = async (e) => {
@@ -186,22 +165,11 @@ export default function AdminLogin() {
               <p className="font-body text-xs" style={{ color: '#555' }}>Wprowadź 6-cyfrowy kod z aplikacji Authenticator</p>
             </div>
 
-            <div className="flex gap-2">
-              {totpCode.map((digit, idx) => (
-                <input
-                  key={idx}
-                  ref={el => totpRefs.current[idx] = el}
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={1}
-                  value={digit}
-                  onChange={e => handleTotpChange(idx, e.target.value)}
-                  onKeyDown={e => handleTotpKeyDown(idx, e)}
-                  onPaste={idx === 0 ? handleTotpPaste : undefined}
-                  className={`totp-box ${digit ? 'filled' : ''}`}
-                />
-              ))}
-            </div>
+            <TotpCodeInput
+              value={totpCode.join('')}
+              onChange={code => setTotpCode(Array.from({ length: 6 }, (_, index) => code[index] || ''))}
+              inputRef={totpInputRef}
+            />
 
             {error && (
               <p className="font-body text-xs text-center" style={{ color: '#ff4444' }}>{error}</p>

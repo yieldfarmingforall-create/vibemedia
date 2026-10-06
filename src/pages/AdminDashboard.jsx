@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'; // eslint-disable-line
+import React, { useState, useEffect, useRef, useCallback } from 'react'; // eslint-disable-line
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import {
@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { generateTotpSecret, verifyTotp, buildOtpAuthUri } from '@/lib/totp';
 import WysiwygEditor from '@/components/WysiwygEditor';
+import TotpCodeInput from '@/components/TotpCodeInput';
 
 const SESSION_KEY = 'adminSession';
 
@@ -932,56 +933,17 @@ function TabCRM() {
 }
 
 function TotpInput({ state, setState, refs }) {
-  const handleChange = (index, value) => {
-    const digits = value.replace(/\D/g, '');
-    const digit = digits.slice(-1);
-    setState(previous => {
-      const next = [...previous];
-      next[index] = digit;
-      return next;
-    });
-    if (digit && index < 5) {
-      requestAnimationFrame(() => refs.current[index + 1]?.focus());
-    }
-  };
-
-  const handleKeyDown = (index, event) => {
-    if (event.key === 'Backspace' && !state[index] && index > 0) {
-      refs.current[index - 1]?.focus();
-    }
-    if (event.key === 'ArrowLeft' && index > 0) {
-      refs.current[index - 1]?.focus();
-    }
-    if (event.key === 'ArrowRight' && index < 5) {
-      refs.current[index + 1]?.focus();
-    }
-  };
-
-  const handlePaste = (event) => {
-    event.preventDefault();
-    const pasted = event.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
-    setState(Array.from({ length: 6 }, (_, index) => pasted[index] || ''));
-    refs.current[Math.min(pasted.length, 5)]?.focus();
-  };
+  const inputRef = useCallback(element => {
+    refs.current[0] = element;
+  }, [refs]);
 
   return (
-    <div className="flex gap-2">
-      {state.map((digit, index) => (
-        <input
-          key={index}
-          ref={element => { refs.current[index] = element; }}
-          type="text"
-          inputMode="numeric"
-          maxLength={1}
-          value={digit}
-          onChange={event => handleChange(index, event.target.value)}
-          onKeyDown={event => handleKeyDown(index, event)}
-          onPaste={index === 0 ? handlePaste : undefined}
-          className={`totp-box ${digit ? 'filled' : ''}`}
-          style={{ width: 40, height: 48 }}
-        />
-      ))}
-    </div>
+    <TotpCodeInput
+      value={state.join('')}
+      onChange={code => setState(Array.from({ length: 6 }, (_, index) => code[index] || ''))}
+      inputRef={inputRef}
+      boxStyle={{ width: 40, height: 48 }}
+    />
   );
 }
 
