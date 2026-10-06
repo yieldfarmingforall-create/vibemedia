@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  motion, useInView, useScroll, useTransform, useSpring, AnimatePresence,
+  motion, useInView, useScroll, useTransform, useSpring,
 } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
-import { Play, Pause, Volume2, VolumeX, ArrowRight } from 'lucide-react';
-import Lightbox from '@/components/Lightbox';
+import { ArrowRight, Facebook, Instagram, Linkedin, Youtube } from 'lucide-react';
 import CustomCursor from '@/components/CustomCursor';
 import ParticleTrail from '@/components/home/ParticleTrail';
 import InteractiveGrid from '@/components/home/InteractiveGrid';
@@ -362,107 +361,80 @@ function AboutSection() {
   );
 }
 
-// ── Video feed item ──────────────────────────────────────────────────────────
-function VideoFeedItem({ review, isActive }) {
-  const videoRef = useRef(null);
-  const [playing, setPlaying] = useState(false);
-  const [muted, setMuted] = useState(true);
-
-  useEffect(() => {
-    if (!videoRef.current) return;
-    if (isActive) videoRef.current.play().then(() => setPlaying(true)).catch(() => {});
-    else { videoRef.current.pause(); setPlaying(false); }
-  }, [isActive]);
-
-  const togglePlay = () => {
-    if (!videoRef.current) return;
-    if (playing) { videoRef.current.pause(); setPlaying(false); }
-    else { videoRef.current.play(); setPlaying(true); }
-  };
-  const toggleMute = (e) => {
-    e.stopPropagation();
-    if (!videoRef.current) return;
-    videoRef.current.muted = !muted; setMuted(!muted);
-  };
-
-  return (
-    <div className="video-snap-item relative flex items-center justify-center" style={{ height:'100vh', background:'#000' }}>
-      <video ref={videoRef} src={review.fileUrl} loop muted={muted} playsInline
-        className="max-h-full max-w-full object-contain cursor-pointer"
-        style={{ maxHeight:'90vh', maxWidth:450 }} onClick={togglePlay} />
-      <div className="absolute bottom-16 left-0 right-0 flex flex-col items-center gap-3 px-4">
-        {review.description && (
-          <div className="text-xs text-center px-4 py-2 rounded-xl"
-            style={{ background:'rgba(0,0,0,0.75)', color:'#fff', backdropFilter:'blur(10px)' }}
-            dangerouslySetInnerHTML={{ __html: review.description }} />
-        )}
-        <div className="flex gap-4">
-          {[{ action:togglePlay, icon: playing ? <Pause size={16}/> : <Play size={16}/> },
-            { action:toggleMute, icon: muted ? <VolumeX size={16}/> : <Volume2 size={16}/> }].map((btn,i) => (
-            <button key={i} onClick={btn.action} className="p-2 rounded-xl transition-all duration-300"
-              style={{ border:'1px solid rgba(255,193,7,0.6)', color:AMBER }}
-              onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,193,7,0.12)';e.currentTarget.style.transform='scale(1.12)';}}
-              onMouseLeave={e=>{e.currentTarget.style.background='transparent';e.currentTarget.style.transform='scale(1)';}}>
-              {btn.icon}
-            </button>
-          ))}
-        </div>
-      </div>
-      {!playing && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="p-5 rounded-full" style={{ background:'rgba(255,193,7,0.12)', border:'2px solid #FFC107' }}>
-            <Play size={36} style={{ color:AMBER }} />
-          </div>
-        </div>
-      )}
-    </div>
-  );
+function reviewText(value = '') {
+  return String(value)
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/(p|div|li)>/gi, '\n')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .trim();
 }
 
-// ── Bento card ───────────────────────────────────────────────────────────────
-function ImageCard({ review, onClick, index }) {
+function hasSafeSocialUrl(value) {
+  try {
+    return ['http:', 'https:'].includes(new URL(value).protocol);
+  } catch {
+    return false;
+  }
+}
+
+// ── Review card ──────────────────────────────────────────────────────────────
+function ReviewCard({ review, index }) {
   const revealRef = useRef(null);
   const inView = useInView(revealRef, { once:true, margin:'-60px' });
-  const { ref: tiltRef, onMouseMove, onMouseLeave, tiltStyle } = use3DTilt({ maxDeg:10, glowColor:'rgba(255,193,7,0.22)', scale:1.03 });
-  const pattern = index % 7;
-  const colSpan = pattern === 0 ? 'sm:col-span-2' : '';
-  const rowSpan = pattern === 3 ? 'sm:row-span-2' : '';
-  const fromX = index % 3 === 2 ? 0 : index % 2 === 0 ? -80 : 80;
-  const fromY = index % 3 === 2 ? 80 : 0;
+  const socials = [
+    { key: 'instagramUrl', label: 'Instagram', Icon: Instagram },
+    { key: 'facebookUrl', label: 'Facebook', Icon: Facebook },
+    { key: 'linkedinUrl', label: 'LinkedIn', Icon: Linkedin },
+    { key: 'youtubeUrl', label: 'YouTube', Icon: Youtube },
+  ].filter(({ key }) => hasSafeSocialUrl(review[key]));
 
   return (
-    <motion.div ref={revealRef}
-      initial={{ opacity:0, x:fromX, y:fromY }}
-      animate={inView ? { opacity:1, x:0, y:0 } : {}}
-      transition={{ duration:0.85, delay:(index%4)*0.1, ease:[0.22,1,0.36,1] }}
-      className={`relative overflow-hidden cursor-pointer group rounded-2xl ${colSpan} ${rowSpan}`}
-      style={{
-        aspectRatio: pattern === 3 ? 'auto' : '1',
-        minHeight: pattern === 3 ? 480 : undefined,
-      }}>
-      {/* tilt wrapper */}
-      <div ref={tiltRef} onMouseMove={onMouseMove} onMouseLeave={onMouseLeave} onClick={onClick}
-        style={{
-          ...tiltStyle,
-          width:'100%', height:'100%', borderRadius:'1rem', overflow:'hidden',
-          border:'1px solid rgba(255,255,255,0.07)',
-          background:'rgba(255,255,255,0.025)', backdropFilter:'blur(12px)',
-        }}>
-        <img src={review.fileUrl} alt="Opinia" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4"
-          style={{ background:'linear-gradient(to top,rgba(0,0,0,0.72) 0%,transparent 62%)' }}>
-          <span className="font-ui text-xs tracking-widest uppercase px-3 py-1.5 rounded-lg"
-            style={{ color:AMBER, border:'1px solid rgba(255,193,7,0.35)', background:'rgba(0,0,0,0.5)' }}>
-            Powiększ
-          </span>
+    <motion.article
+      ref={revealRef}
+      initial={{ opacity: 0, y: 28 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.65, delay: (index % 4) * 0.08, ease: [0.22, 1, 0.36, 1] }}
+      className="overflow-hidden rounded-2xl"
+      style={{ background:'rgba(255,255,255,0.025)', border:'1px solid rgba(255,193,7,0.14)', backdropFilter:'blur(12px)' }}
+    >
+      {review.fileUrl && (
+        <div className="flex items-center justify-center overflow-hidden" style={{ minHeight: review.type === 'audio' ? 110 : 220, background:'rgba(0,0,0,0.45)' }}>
+          {review.type === 'video' ? (
+            <video src={review.fileUrl} controls playsInline preload="metadata" className="w-full" style={{ maxHeight:320 }} aria-label={`Nagranie wideo: ${review.authorName || 'opinia klienta'}`} />
+          ) : review.type === 'audio' ? (
+            <div className="w-full px-5 py-7">
+              <audio src={review.fileUrl} controls preload="metadata" className="w-full" aria-label={`Nagranie audio: ${review.authorName || 'opinia klienta'}`} />
+            </div>
+          ) : (
+            <img src={review.fileUrl} alt={`Opinia klienta${review.authorName ? ` — ${review.authorName}` : ''}`} className="w-full object-cover" style={{ maxHeight:320 }} loading="lazy" />
+          )}
         </div>
+      )}
+      <div className="p-5 sm:p-6">
+        {review.authorName && <h3 className="font-heading font-bold text-base mb-3" style={{ color:'#fff' }}>{review.authorName}</h3>}
+        {review.description && <p className="font-body text-sm leading-7" style={{ color:'#D4D4D8', whiteSpace:'pre-wrap' }}>{reviewText(review.description)}</p>}
+        {socials.length > 0 && (
+          <nav className="flex items-center gap-2 mt-5" aria-label={`Profile społecznościowe${review.authorName ? `: ${review.authorName}` : ''}`}>
+            {socials.map(({ key, label, Icon }) => (
+              <a key={key} href={review[key]} target="_blank" rel="noopener noreferrer" aria-label={`Otwórz profil ${label}`}
+                className="inline-flex items-center justify-center rounded-full transition-colors"
+                style={{ width:38, height:38, color:AMBER, border:'1px solid rgba(255,193,7,0.28)', background:'rgba(255,193,7,0.06)' }}>
+                <Icon size={17} aria-hidden="true" />
+              </a>
+            ))}
+          </nav>
+        )}
       </div>
-    </motion.div>
+    </motion.article>
   );
 }
 
 // ── Reviews section ──────────────────────────────────────────────────────────
-function ReviewsSection({ reviewsRef, imageReviews, videoReviews, mediaTab, setMediaTab, activeVideoIndex, videoFeedRef, setLightboxItem }) {
+function ReviewsSection({ reviewsRef, reviews, title }) {
   const sRef = useRef(null);
   const { scrollYProgress } = useScroll({ target: sRef, offset: ['start end', 'center center'] });
   const titleX    = useSpring(useTransform(scrollYProgress, [0,1], [-140, 0]), sp);
@@ -470,74 +442,37 @@ function ReviewsSection({ reviewsRef, imageReviews, videoReviews, mediaTab, setM
   const titleOp   = useTransform(scrollYProgress, [0, 0.55], [0, 1]);
 
   return (
-    <section ref={el => { sRef.current = el; if (reviewsRef) reviewsRef.current = el; }}
+    <section id="opinie" ref={el => { sRef.current = el; if (reviewsRef) reviewsRef.current = el; }}
       style={{ maxWidth:1400, margin:'0 auto', padding:'clamp(4rem,8vw,8rem) clamp(1.5rem,5vw,5rem)' }}>
 
       <div className="text-center mb-3 overflow-hidden">
-        <motion.p style={{ opacity: titleOp }} className="font-heading text-xs tracking-widest uppercase mb-4"
-          style={{ color:AMBER, letterSpacing:'0.25em' }}>Wyniki</motion.p>
+        <motion.p className="font-heading text-xs tracking-widest uppercase mb-4"
+          style={{ opacity:titleOp, color:AMBER, letterSpacing:'0.25em' }}>Wyniki</motion.p>
         <motion.h2 className="font-heading" style={{
           x: titleX, opacity: titleOp, display:'inline-block',
           fontSize:'clamp(2rem,4.5vw,3.5rem)', fontWeight:900,
           background:'linear-gradient(90deg,#fff 0%,#e4e4e7 45%,#FFC107 100%)',
           WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text',
         }}>
-          Opinie moich klientów
+          {reviewText(title) || 'Opinie moich klientów'}
         </motion.h2>
       </div>
       <div className="text-center mb-16 overflow-hidden">
         <motion.p className="font-body text-sm" style={{ x: subX, opacity: titleOp, display:'inline-block', color:'#52525b' }}>
-          Sprawdź efekty współpracy — liczby mówią same za siebie
+          Historie klientów, zdjęcia, nagrania i filmy z przebiegu współpracy
         </motion.p>
       </div>
 
-      <Reveal delay={0.05}>
-        <div className="flex justify-center gap-3 mb-16">
-          {['images','videos'].map(tab => (
-            <motion.button key={tab} onClick={()=>setMediaTab(tab)}
-              whileHover={{ scale:1.03, y:-1 }} whileTap={{ scale:0.97 }}
-              className="font-ui text-xs px-7 py-3 transition-all duration-300"
-              style={{
-                background: mediaTab===tab ? AMBER : 'rgba(255,255,255,0.03)',
-                color: mediaTab===tab ? '#000' : AMBER,
-                border:`1px solid ${mediaTab===tab ? AMBER : 'rgba(255,193,7,0.25)'}`,
-                fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase',
-                cursor:'pointer', borderRadius:'0.75rem', backdropFilter:'blur(8px)',
-              }}>
-              {tab==='images' ? 'Materiały graficzne' : 'Materiały wideo'}
-            </motion.button>
-          ))}
+      {reviews.length === 0 ? (
+        <div className="text-center py-16 rounded-2xl font-body text-sm"
+          style={{ color:'#71717A', border:'1px solid rgba(255,255,255,0.07)', background:'rgba(255,255,255,0.015)' }}>
+          Opinie klientów pojawią się tutaj.
         </div>
-      </Reveal>
-
-      <AnimatePresence mode="wait">
-        {mediaTab==='images' && (
-          <motion.div key="images" initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} transition={{ duration:0.3 }}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" style={{ gap:'0.85rem', gridAutoRows:'320px' }}>
-            {imageReviews.length===0 ? (
-              <div className="col-span-full text-center py-20 rounded-2xl"
-                style={{ color:'#52525b', border:'1px solid rgba(255,255,255,0.05)', background:'rgba(255,255,255,0.015)' }}>
-                Brak materiałów. Dodaj je w panelu admina.
-              </div>
-            ) : imageReviews.map((r,i) => <ImageCard key={r.id} review={r} index={i} onClick={()=>setLightboxItem(r)} />)}
-          </motion.div>
-        )}
-        {mediaTab==='videos' && (
-          <motion.div key="videos" initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} transition={{ duration:0.3 }}>
-            {videoReviews.length===0 ? (
-              <div className="text-center py-20 rounded-2xl"
-                style={{ color:'#52525b', border:'1px solid rgba(255,255,255,0.05)', background:'rgba(255,255,255,0.015)' }}>
-                Brak wideo. Dodaj je w panelu admina.
-              </div>
-            ) : (
-              <div ref={videoFeedRef} className="rounded-2xl"
-                style={{ height:'90vh', overflowY:'scroll', scrollSnapType:'y mandatory', WebkitOverflowScrolling:'touch', border:'1px solid rgba(255,193,7,0.12)' }}>
-                {videoReviews.map((r,i) => <VideoFeedItem key={r.id} review={r} isActive={i===activeVideoIndex} />)}
-              </div>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+          {reviews.map((review, index) => <ReviewCard key={review.id} review={review} index={index} />)}
+        </div>
+      )}
     </section>
   );
 }
@@ -585,11 +520,7 @@ function ContactSection({ pageContent }) {
 // ── Main ─────────────────────────────────────────────────────────────────────
 export default function Home() {
   const [reviews, setReviews] = useState([]);
-  const [mediaTab, setMediaTab] = useState('images');
-  const [lightboxItem, setLightboxItem] = useState(null);
-  const [activeVideoIndex, setActiveVideoIndex] = useState(0);
   const [pageContent, setPageContent] = useState({});
-  const videoFeedRef = useRef(null);
   const reviewsRef = useRef(null);
 
   useEffect(() => {
@@ -603,17 +534,6 @@ export default function Home() {
       setPageContent(map);
     }).catch(console.error);
   }, []);
-
-  const imageReviews = reviews.filter(r => r.type === 'image');
-  const videoReviews = reviews.filter(r => r.type === 'video');
-
-  useEffect(() => {
-    if (mediaTab !== 'videos' || !videoFeedRef.current) return;
-    const el = videoFeedRef.current;
-    const onScroll = () => setActiveVideoIndex(Math.round(el.scrollTop / el.clientHeight));
-    el.addEventListener('scroll', onScroll, { passive:true });
-    return () => el.removeEventListener('scroll', onScroll);
-  }, [mediaTab]);
 
   return (
     <div style={{ background:'#000', minHeight:'100vh', color:'#fff' }}>
@@ -641,15 +561,11 @@ export default function Home() {
 
       <ReviewsSection
         reviewsRef={reviewsRef}
-        imageReviews={imageReviews} videoReviews={videoReviews}
-        mediaTab={mediaTab} setMediaTab={setMediaTab}
-        activeVideoIndex={activeVideoIndex} videoFeedRef={videoFeedRef}
-        setLightboxItem={setLightboxItem}
+        reviews={reviews}
+        title={pageContent['home.reviews.title']}
       />
 
       <ContactSection pageContent={pageContent} />
-
-      {lightboxItem && <Lightbox item={lightboxItem} onClose={() => setLightboxItem(null)} />}
     </div>
   );
 }

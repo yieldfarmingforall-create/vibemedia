@@ -180,7 +180,18 @@ app.delete('/api/services/:id', async (req, res) => {
 });
 
 // ── REVIEWS ───────────────────────────────────────────────────────────────────
-const revSel = `SELECT id, type, file_url AS "fileUrl", description, order_num AS "order", created_at AS "created_date" FROM reviews`;
+const revSel = `SELECT id, type, file_url AS "fileUrl", description, author_name AS "authorName",
+  instagram_url AS "instagramUrl", facebook_url AS "facebookUrl",
+  linkedin_url AS "linkedinUrl", youtube_url AS "youtubeUrl",
+  order_num AS "order", created_at AS "created_date" FROM reviews`;
+
+const allowedReviewTypes = new Set(['image', 'video', 'audio']);
+const normalizeSocialUrl = (value) => {
+  if (value === undefined || value === null || value === '') return '';
+  const url = new URL(String(value));
+  if (!['http:', 'https:'].includes(url.protocol)) throw new Error('Link społecznościowy musi zaczynać się od http:// lub https://.');
+  return url.toString();
+};
 
 app.get('/api/reviews', async (req, res) => {
   try {
@@ -193,26 +204,58 @@ app.get('/api/reviews', async (req, res) => {
 
 app.post('/api/reviews', async (req, res) => {
   try {
-    const { type, fileUrl = '', description = '', order: ord = 0 } = req.body;
+    const {
+      type, fileUrl = '', description = '', order: ord = 0, authorName = '',
+      instagramUrl, facebookUrl, linkedinUrl, youtubeUrl,
+    } = req.body;
+    if (!allowedReviewTypes.has(type)) return res.status(400).json({ error: 'Nieprawidłowy typ opinii.' });
+    const socialUrls = [
+      normalizeSocialUrl(instagramUrl), normalizeSocialUrl(facebookUrl),
+      normalizeSocialUrl(linkedinUrl), normalizeSocialUrl(youtubeUrl),
+    ];
     const r = await pool.query(
-      `INSERT INTO reviews (type,file_url,description,order_num) VALUES ($1,$2,$3,$4) RETURNING id`,
-      [type, fileUrl, description, ord]
+      `INSERT INTO reviews (type,file_url,description,order_num,author_name,instagram_url,facebook_url,linkedin_url,youtube_url)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING id`,
+      [type, fileUrl, description, ord, authorName, ...socialUrls]
     );
     const row = await pool.query(`${revSel} WHERE id=$1`, [r.rows[0].id]);
     res.json(row.rows[0]);
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) {
+    const invalidUrl = e instanceof TypeError || e.message?.startsWith('Link społecznościowy');
+    res.status(invalidUrl ? 400 : 500).json({ error: e.message });
+  }
 });
 
 app.put('/api/reviews/:id', async (req, res) => {
   try {
-    const map = { description:'description', fileUrl:'file_url', order:'order_num' };
+    const map = {
+      type:'type', description:'description', fileUrl:'file_url', order:'order_num',
+      authorName:'author_name', instagramUrl:'instagram_url', facebookUrl:'facebook_url',
+      linkedinUrl:'linkedin_url', youtubeUrl:'youtube_url',
+    };
+    if (req.body.type !== undefined && !allowedReviewTypes.has(req.body.type)) {
+      return res.status(400).json({ error: 'Nieprawidłowy typ opinii.' });
+    }
     const sets = []; const params = [];
-    Object.entries(map).forEach(([k,col]) => { if (req.body[k] !== undefined) { params.push(req.body[k]); sets.push(`${col}=$${params.length}`); } });
-    params.push(req.params.id);
-    await pool.query(`UPDATE reviews SET ${sets.join(',')} WHERE id=$${params.length}`, params);
+    for (const [key, column] of Object.entries(map)) {
+      if (req.body[key] !== undefined) {
+        const value = ['instagramUrl', 'facebookUrl', 'linkedinUrl', 'youtubeUrl'].includes(key)
+          ? normalizeSocialUrl(req.body[key])
+          : req.body[key];
+        params.push(value);
+        sets.push(`${column}=$${params.length}`);
+      }
+    }
+    if (sets.length) {
+      params.push(req.params.id);
+      await pool.query(`UPDATE reviews SET ${sets.join(',')} WHERE id=$${params.length}`, params);
+    }
     const row = await pool.query(`${revSel} WHERE id=$1`, [req.params.id]);
     res.json(row.rows[0]);
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) {
+    const invalidUrl = e instanceof TypeError || e.message?.startsWith('Link społecznościowy');
+    res.status(invalidUrl ? 400 : 500).json({ error: e.message });
+  }
 });
 
 app.delete('/api/reviews/:id', async (req, res) => {

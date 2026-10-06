@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import {
   Type, Image, Briefcase, HelpCircle, Users, Settings,
   Plus, Trash2, Save, Upload, LogOut, ChevronDown, ChevronUp,
-  Eye, EyeOff, Check, X, Calendar, Layers, ListOrdered
+  Check, X, Calendar, Layers, ListOrdered
 } from 'lucide-react';
 import { generateTotpSecret, verifyTotp, buildOtpAuthUri } from '@/lib/totp';
 import WysiwygEditor from '@/components/WysiwygEditor';
@@ -129,54 +129,171 @@ function TabText() {
 function TabReviews() {
   const [reviews, setReviews] = useState([]);
   const [uploading, setUploading] = useState(false);
-  const [editDesc, setEditDesc] = useState({});
+  const [drafts, setDrafts] = useState({});
+  const [form, setForm] = useState({
+    type: 'image',
+    authorName: '',
+    description: '',
+    instagramUrl: '',
+    facebookUrl: '',
+    linkedinUrl: '',
+    youtubeUrl: '',
+  });
+  const [mediaFile, setMediaFile] = useState(null);
   const fileRef = useRef(null);
 
-  const load = () => base44.entities.Review.list('order', 100).then(data => setReviews(data || []));
+  const load = async () => {
+    const data = await base44.entities.Review.list('order', 100);
+    const rows = data || [];
+    setReviews(rows);
+    setDrafts(Object.fromEntries(rows.map(review => [review.id, {
+      authorName: review.authorName || '',
+      description: review.description || '',
+      instagramUrl: review.instagramUrl || '',
+      facebookUrl: review.facebookUrl || '',
+      linkedinUrl: review.linkedinUrl || '',
+      youtubeUrl: review.youtubeUrl || '',
+    }])));
+  };
   useEffect(() => { load(); }, []);
 
-  const handleUpload = async (e) => {
-    const files = Array.from(e.target.files);
-    if (!files.length) return;
-    setUploading(true);
-    for (const file of files) {
-      try {
-        const { file_url } = await base44.integrations.Core.UploadFile({ file });
-        const type = file.type.startsWith('video') ? 'video' : 'image';
-        await base44.entities.Review.create({ type, fileUrl: file_url, description: '', order: reviews.length + 1 });
-      } catch (e) { console.error(e); }
+  const handleCreate = async (e) => {
+    e.preventDefault();
+    if (!mediaFile) {
+      alert('Wybierz zdjęcie, film lub plik MP3.');
+      return;
     }
-    setUploading(false);
-    load();
+    const extension = mediaFile.name.split('.').pop()?.toLowerCase();
+    const validMedia = form.type === 'image'
+      ? mediaFile.type.startsWith('image/')
+      : form.type === 'video'
+        ? mediaFile.type.startsWith('video/') || ['mp4', 'webm', 'mov'].includes(extension)
+        : mediaFile.type === 'audio/mpeg' || extension === 'mp3';
+    if (!validMedia) {
+      alert('Wybrany plik nie pasuje do wskazanego rodzaju materiału.');
+      return;
+    }
+    if (mediaFile.size > 100 * 1024 * 1024) {
+      alert('Plik jest za duży. Maksymalny rozmiar to 100 MB.');
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file: mediaFile });
+      await base44.entities.Review.create({
+        ...form,
+        fileUrl: file_url,
+        order: reviews.length + 1,
+      });
+      setForm({
+        type: 'image',
+        authorName: '',
+        description: '',
+        instagramUrl: '',
+        facebookUrl: '',
+        linkedinUrl: '',
+        youtubeUrl: '',
+      });
+      setMediaFile(null);
+      if (fileRef.current) fileRef.current.value = '';
+      await load();
+    } catch (error) {
+      console.error(error);
+      alert(error.message || 'Nie udało się dodać opinii.');
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleDelete = async (id) => {
     if (!confirm('Usunąć tę opinię?')) return;
-    await base44.entities.Review.delete(id);
-    load();
+    try {
+      await base44.entities.Review.delete(id);
+      await load();
+    } catch (error) {
+      alert(error.message || 'Nie udało się usunąć opinii.');
+    }
   };
 
-  const handleSaveDesc = async (review) => {
-    await base44.entities.Review.update(review.id, { description: editDesc[review.id] ?? review.description });
-    load();
+  const updateDraft = (id, field, value) => {
+    setDrafts(current => ({ ...current, [id]: { ...current[id], [field]: value } }));
+  };
+
+  const handleSave = async (review) => {
+    try {
+      await base44.entities.Review.update(review.id, drafts[review.id]);
+      await load();
+    } catch (error) {
+      alert(error.message || 'Nie udało się zapisać opinii.');
+    }
   };
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <h2 className="font-heading font-black text-xl" style={{ color: '#FFC107' }}>Zarządzanie opiniami (CMS)</h2>
-        <label
-          className="font-ui font-bold text-xs px-4 py-3 uppercase tracking-widest transition-all duration-200 flex items-center gap-2 cursor-pointer"
-          style={{ background: uploading ? 'rgba(255,193,7,0.2)' : '#FFC107', color: uploading ? '#FFC107' : '#000', border: '1px solid #FFC107' }}
-        >
-          <Upload size={14} />
-          {uploading ? 'Przesyłanie...' : 'Dodaj plik'}
-          <input ref={fileRef} type="file" accept="image/*,video/*" multiple className="hidden" onChange={handleUpload} />
+      <h2 className="font-heading font-black text-xl" style={{ color: '#FFC107' }}>Zarządzanie opiniami (CMS)</h2>
+
+      <form onSubmit={handleCreate} className="flex flex-col gap-4 p-5 sm:p-6"
+        style={{ background:'#0A0A0A', border:'1px solid rgba(255,193,7,0.2)', borderRadius:'8px' }}>
+        <h3 className="font-heading font-bold text-base" style={{ color:'#fff' }}>Dodaj opinię klienta</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <label className="font-ui text-xs uppercase tracking-widest" style={{ color:'#A1A1AA' }}>
+            Imię lub nazwa klienta
+            <input value={form.authorName} onChange={e => setForm(current => ({ ...current, authorName:e.target.value }))}
+              className="input-amber mt-2 w-full" maxLength={255} placeholder="Np. Anna K." />
+          </label>
+          <label className="font-ui text-xs uppercase tracking-widest" style={{ color:'#A1A1AA' }}>
+            Rodzaj materiału
+            <select value={form.type} onChange={e => { setForm(current => ({ ...current, type:e.target.value })); setMediaFile(null); if (fileRef.current) fileRef.current.value = ''; }}
+              className="input-amber mt-2 w-full">
+              <option value="image">Zdjęcie</option>
+              <option value="video">Wideo</option>
+              <option value="audio">Nagranie MP3</option>
+            </select>
+          </label>
+        </div>
+
+        <label className="font-ui text-xs uppercase tracking-widest" style={{ color:'#A1A1AA' }}>
+          Plik opinii ({form.type === 'image' ? 'zdjęcie' : form.type === 'video' ? 'wideo' : 'MP3'})
+          <input ref={fileRef} type="file"
+            accept={form.type === 'image' ? 'image/*' : form.type === 'video' ? 'video/*,.mp4,.webm,.mov' : 'audio/mpeg,.mp3'}
+            onChange={e => setMediaFile(e.target.files?.[0] || null)}
+            className="mt-2 block w-full text-sm normal-case tracking-normal" />
+          {mediaFile && <span className="block mt-1 normal-case tracking-normal" style={{ color:'#FFC107' }}>{mediaFile.name}</span>}
         </label>
-      </div>
+
+        <label className="font-ui text-xs uppercase tracking-widest" style={{ color:'#A1A1AA' }}>
+          Treść opinii
+          <textarea value={form.description} onChange={e => setForm(current => ({ ...current, description:e.target.value }))}
+            className="input-amber mt-2 w-full resize-y normal-case tracking-normal" rows={4} maxLength={5000}
+            placeholder="Wpisz opinię klienta..." />
+        </label>
+
+        <div>
+          <p className="font-ui text-xs uppercase tracking-widest mb-3" style={{ color:'#A1A1AA' }}>Profile społecznościowe — opcjonalne</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {[
+              ['instagramUrl', 'Instagram'],
+              ['facebookUrl', 'Facebook'],
+              ['linkedinUrl', 'LinkedIn'],
+              ['youtubeUrl', 'YouTube'],
+            ].map(([key, label]) => (
+              <input key={key} type="url" value={form[key]}
+                onChange={e => setForm(current => ({ ...current, [key]:e.target.value }))}
+                className="input-amber w-full" placeholder={`${label} — https://...`} aria-label={`Link do profilu ${label}`} />
+            ))}
+          </div>
+        </div>
+
+        <button type="submit" disabled={uploading}
+          className="font-ui font-bold text-xs px-5 py-3 uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-50"
+          style={{ background:'#FFC107', color:'#000', border:'1px solid #FFC107', cursor:uploading ? 'wait' : 'pointer', borderRadius:'4px' }}>
+          <Upload size={14} /> {uploading ? 'Dodawanie opinii...' : 'Dodaj opinię'}
+        </button>
+      </form>
 
       {reviews.length === 0 && (
-        <p className="font-body text-sm" style={{ color: '#555' }}>Brak opinii. Dodaj pierwsze zdjęcie lub wideo.</p>
+        <p className="font-body text-sm" style={{ color: '#555' }}>Brak opinii. Dodaj zdjęcie, wideo lub nagranie MP3.</p>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -184,7 +301,7 @@ function TabReviews() {
           <div key={review.id} className="p-4" style={{ background: '#0A0A0A', border: '1px solid rgba(255,193,7,0.15)', borderRadius: '4px' }}>
             <div className="flex items-start justify-between gap-2 mb-3">
               <span className="font-ui text-xs px-2 py-1" style={{ background: 'rgba(255,193,7,0.1)', color: '#FFC107', border: '1px solid rgba(255,193,7,0.3)' }}>
-                {review.type === 'image' ? '📷 Zdjęcie' : '🎥 Wideo'}
+                {review.type === 'image' ? 'Zdjęcie' : review.type === 'video' ? 'Wideo' : 'Nagranie MP3'}
               </span>
               <button onClick={() => handleDelete(review.id)} style={{ color: '#666', background: 'none', border: 'none', cursor: 'pointer' }}
                 onMouseEnter={e => e.currentTarget.style.color = '#ff4444'}
@@ -193,18 +310,39 @@ function TabReviews() {
               </button>
             </div>
             {review.type === 'image'
-              ? <img src={review.fileUrl} alt="" className="w-full rounded mb-3" style={{ maxHeight: '120px', objectFit: 'cover', border: '1px solid rgba(255,193,7,0.1)' }} />
-              : <video src={review.fileUrl} className="w-full rounded mb-3" style={{ maxHeight: '120px', objectFit: 'cover', border: '1px solid rgba(255,193,7,0.1)' }} />
+              ? <img src={review.fileUrl} alt="" className="w-full rounded mb-3" style={{ maxHeight:'180px', objectFit:'cover', border:'1px solid rgba(255,193,7,0.1)' }} />
+              : review.type === 'video'
+                ? <video src={review.fileUrl} controls className="w-full rounded mb-3" style={{ maxHeight:'180px', border:'1px solid rgba(255,193,7,0.1)' }} />
+                : <audio src={review.fileUrl} controls className="w-full mb-3" />
             }
-            <label className="font-ui text-xs uppercase tracking-widest block mb-2" style={{ color: '#A1A1AA' }}>Opis (WYSIWYG)</label>
-            <WysiwygEditor
-              value={editDesc[review.id] ?? review.description ?? ''}
-              onChange={val => setEditDesc(d => ({ ...d, [review.id]: val }))}
-            />
-            <button onClick={() => handleSaveDesc(review)}
-              className="mt-2 font-ui text-xs px-3 py-2 flex items-center gap-1 transition-all duration-200"
+            <div className="flex flex-col gap-3">
+              <label className="font-ui text-xs uppercase tracking-widest" style={{ color:'#A1A1AA' }}>
+                Imię lub nazwa klienta
+                <input value={drafts[review.id]?.authorName ?? ''} onChange={e => updateDraft(review.id, 'authorName', e.target.value)}
+                  className="input-amber mt-2 w-full" maxLength={255} />
+              </label>
+              <label className="font-ui text-xs uppercase tracking-widest" style={{ color:'#A1A1AA' }}>
+                Treść opinii
+                <textarea value={drafts[review.id]?.description ?? ''} onChange={e => updateDraft(review.id, 'description', e.target.value)}
+                  className="input-amber mt-2 w-full resize-y normal-case tracking-normal" rows={4} maxLength={5000} />
+              </label>
+              <div className="grid grid-cols-1 gap-2">
+                {[
+                  ['instagramUrl', 'Instagram'],
+                  ['facebookUrl', 'Facebook'],
+                  ['linkedinUrl', 'LinkedIn'],
+                  ['youtubeUrl', 'YouTube'],
+                ].map(([key, label]) => (
+                  <input key={key} type="url" value={drafts[review.id]?.[key] ?? ''}
+                    onChange={e => updateDraft(review.id, key, e.target.value)}
+                    className="input-amber w-full" placeholder={`${label} — https://...`} aria-label={`Link do profilu ${label}`} />
+                ))}
+              </div>
+            </div>
+            <button onClick={() => handleSave(review)}
+              className="mt-3 font-ui text-xs px-3 py-2 flex items-center gap-1 transition-all duration-200"
               style={{ background: 'rgba(255,193,7,0.1)', color: '#FFC107', border: '1px solid rgba(255,193,7,0.3)', cursor: 'pointer' }}>
-              <Save size={11} /> Zapisz opis
+              <Save size={11} /> Zapisz opinię
             </button>
           </div>
         ))}

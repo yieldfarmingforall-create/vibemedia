@@ -27,9 +27,20 @@ export async function initDb() {
       type VARCHAR(10) NOT NULL,
       file_url TEXT,
       description TEXT,
+      author_name VARCHAR(255) DEFAULT '',
+      instagram_url TEXT,
+      facebook_url TEXT,
+      linkedin_url TEXT,
+      youtube_url TEXT,
       order_num INTEGER DEFAULT 0,
       created_at TIMESTAMP DEFAULT NOW()
     );
+
+    ALTER TABLE reviews ADD COLUMN IF NOT EXISTS author_name VARCHAR(255) DEFAULT '';
+    ALTER TABLE reviews ADD COLUMN IF NOT EXISTS instagram_url TEXT;
+    ALTER TABLE reviews ADD COLUMN IF NOT EXISTS facebook_url TEXT;
+    ALTER TABLE reviews ADD COLUMN IF NOT EXISTS linkedin_url TEXT;
+    ALTER TABLE reviews ADD COLUMN IF NOT EXISTS youtube_url TEXT;
 
     CREATE TABLE IF NOT EXISTS survey_questions (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
