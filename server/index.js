@@ -266,29 +266,45 @@ app.post('/api/chat', async (req, res) => {
       `Liczba przyszłych wolnych terminów w kalendarzu: ${slots.length}. Przykłady terminów: ${JSON.stringify(slots)}.`,
     ].join('\n');
 
+    const requestBody = JSON.stringify({
+      model: process.env.GROQ_CHAT_MODEL || 'openai/gpt-oss-20b',
+      temperature: 0.25,
+      max_completion_tokens: 350,
+      messages: [{ role: 'system', content: systemPrompt }, ...normalizedMessages],
+    });
     let groqResponse;
-    try {
-      groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: process.env.GROQ_CHAT_MODEL || 'llama-3.3-70b-versatile',
-          temperature: 0.25,
-          max_completion_tokens: 350,
-          messages: [{ role: 'system', content: systemPrompt }, ...normalizedMessages],
-        }),
-        signal: AbortSignal.timeout(20000),
-      });
-    } catch (error) {
-      console.error('Groq chat request failed:', error.message);
-      return res.status(503).json({ error: 'Asystent AI jest chwilowo niedostępny. Spróbuj ponownie za moment.' });
-    }
+    let failureMessage = '';
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      try {
+        groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: requestBody,
+          signal: AbortSignal.timeout(12000),
+        });
+      } catch (error) {
+        failureMessage = error.message;
+        if (attempt === 0) {
+          await new Promise(resolve => setTimeout(resolve, 350));
+          continue;
+        }
+        console.error('Groq chat request failed:', failureMessage);
+        return res.status(503).json({ error: 'Asystent AI jest chwilowo niedostępny. Spróbuj ponownie za moment.' });
+      }
 
-    if (!groqResponse.ok) {
-      console.error('Groq chat returned HTTP', groqResponse.status);
+      if (groqResponse.ok) break;
+      const providerError = await groqResponse.json().catch(() => ({}));
+      failureMessage = String(providerError.error?.message || '').replace(/[\r\n]/g, ' ').slice(0, 240);
+      const retryable = groqResponse.status === 429 || groqResponse.status >= 500;
+      if (retryable && attempt === 0) {
+        const retryAfter = Number(groqResponse.headers.get('retry-after')) * 1000;
+        await new Promise(resolve => setTimeout(resolve, Math.min(retryAfter || 350, 1200)));
+        continue;
+      }
+      console.error('Groq chat returned HTTP', groqResponse.status, failureMessage);
       return res.status(502).json({ error: 'Asystent AI nie odpowiedział poprawnie. Spróbuj ponownie za moment.' });
     }
 
