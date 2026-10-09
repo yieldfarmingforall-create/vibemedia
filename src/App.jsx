@@ -8,6 +8,7 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ScrollToTop from './components/ScrollToTop';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import ChatAssistant from './components/ChatAssistant';
 
 // Page imports
 import Home from './pages/Home';
@@ -36,20 +37,23 @@ const AuthenticatedApp = () => {
   }
 
   return (
-    <Routes>
-      {/* PUBLIC ROUTES */}
-      <Route path="/" element={<><Navbar /><Home /><Footer /></>} />
-      <Route path="/uslugi" element={<><Navbar /><Uslugi /><Footer /></>} />
-      <Route path="/konsultacja" element={<><Navbar /><Konsultacja /><Footer /></>} />
-      <Route path="/szczegoly" element={<><Navbar /><Szczegoly /><Footer /></>} />
-      <Route path="/platnosc" element={<><Navbar /><Platnosc /><Footer /></>} />
+    <>
+      <Routes>
+        {/* PUBLIC ROUTES */}
+        <Route path="/" element={<><Navbar /><Home /><Footer /></>} />
+        <Route path="/uslugi" element={<><Navbar /><Uslugi /><Footer /></>} />
+        <Route path="/konsultacja" element={<><Navbar /><Konsultacja /><Footer /></>} />
+        <Route path="/szczegoly" element={<><Navbar /><Szczegoly /><Footer /></>} />
+        <Route path="/platnosc" element={<><Navbar /><Platnosc /><Footer /></>} />
 
-      {/* ADMIN ROUTES – hidden URL */}
-      <Route path="/management-dashboard-secure-nr7x912" element={<AdminLogin />} />
-      <Route path="/management-dashboard-secure-nr7x912/dashboard" element={<AdminDashboard />} />
+        {/* ADMIN ROUTES – hidden URL */}
+        <Route path="/management-dashboard-secure-nr7x912" element={<AdminLogin />} />
+        <Route path="/management-dashboard-secure-nr7x912/dashboard" element={<AdminDashboard />} />
 
-      <Route path="*" element={<PageNotFound />} />
-    </Routes>
+        <Route path="*" element={<PageNotFound />} />
+      </Routes>
+      <ChatAssistant />
+    </>
   );
 };
 
